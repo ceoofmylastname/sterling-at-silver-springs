@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sterling at Silver Springs — Community Entrance Transformation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0f; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; }
+    #canvas { display: block; width: 100vw; height: 100vh; }
+
+    /* Overlay UI */
+    .overlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 32px 40px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      z-index: 10;
+      pointer-events: none;
+    }
+    .title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: rgba(212,168,67,0.9);
+      margin-bottom: 8px;
+    }
+    .headline {
+      font-size: 36px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .headline span { color: #D4A843; }
+    .progress-container {
+      pointer-events: auto;
+      margin-top: 16px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #E63946, #D4A843, #6B9080);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.1s;
+    }
+    .progress-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 16px;
+      background: #D4A843;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(212,168,67,0.5);
+      left: 0%;
+      transition: left 0.1s;
+    }
+    .hint {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 16px;
+      text-align: center;
+    }
+    .state-label {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      padding: 10px 28px;
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.1);
+      z-index: 10;
+      transition: all 0.5s;
+    }
+    .badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    @media (max-width: 640px) {
+      .overlay { padding: 24px 20px; }
+      .headline { font-size: 28px; }
+      .state-label { font-size: 14px; padding: 8px 20px; top: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="state-label" id="stateLabel">
+  <span class="badge" id="stateBadge" style="background:#E63946"></span>
+  <span id="stateText">Neglected</span>
+</div>
+
+<div class="overlay">
+  <div class="title">Sterling at Silver Springs</div>
+  <div class="headline">The <span>Sterling Standard</span></div>
+  <div class="progress-container">
+    <div class="progress-label">
+      <span>Before</span>
+      <span>The Sterling Standard</span>
+    </div>
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-thumb" id="progressThumb"></div>
+    </div>
+  </div>
+  <div class="hint">Scroll to transform &bull; Click and drag the slider &bull; Watch the Sterling Standard come to life</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// =====================================================
+// SCENE SETUP
+// =====================================================
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 6, 18);
+camera.lookAt(0, 2, 0);
+
+// =====================================================
+// TRANSFORMATION PROGRESS (0 = neglected, 1 = pristine)
+// =====================================================
+let progress = 0;
+let targetProgress = 0;
+let autoPlay = true;
+let autoDir = 1;
+
+// =====================================================
+// COLORS
+// =====================================================
+const COLORS = {
+  neglected: {
+    sky: new THREE.Color(0x1a1a2e),
+    fog: new THREE.Color(0x1a1a2e),
+    ground: new THREE.Color(0x2a2a1a),
+    stone: new THREE.Color(0x4a4a3a),
+    sign: new THREE.Color(0x3a3a2a),
+    signText: new THREE.Color(0x5a5a4a),
+    metal: new THREE.Color(0x3a3a3a),
+    weed: new THREE.Color(0x3a4a2a),
+    light: new THREE.Color(0xff6b35),
+  },
+  pristine: {
+    sky: new THREE.Color(0x1a2a4a),
+    fog: new THREE.Color(0x0d1b2a),
+    ground: new THREE.Color(0x2d5a27),
+    stone: new THREE.Color(0xd4c4a8),
+    sign: new THREE.Color(0xd4c4a8),
+    signText: new THREE.Color(0xD4A843),
+    metal: new THREE.Color(0x8a7a5a),
+    weed: new THREE.Color(0x4a8a3a),
+    light: new THREE.Color(0xfff4e0),
+  }
+};
+
+function lerpColor(c1, c2, t) {
+  return new THREE.Color().lerpColors(c1, c2, t);
+}
+
+// =====================================================
+// FOG & BACKGROUND
+// =====================================================
+scene.fog = new THREE.FogExp2(COLORS.neglected.fog, 0.025);
+scene.background = COLORS.neglected.sky;
+
+// =====================================================
+// GROUND PLANE
+// =====================================================
+const groundGeo = new THREE.PlaneGeometry(80, 80, 40, 40);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: COLORS.neglected.ground,
+  roughness: 0.9,
+  metalness: 0.0,
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Driveway / path
+const pathGeo = new THREE.PlaneGeometry(6, 30);
+const pathMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
+const path = new THREE.Mesh(pathGeo, pathMat);
+path.rotation.x = -Math.PI / 2;
+path.position.set(0, 0.01, 5);
+path.receiveShadow = true;
+scene.add(path);
+
+// =====================================================
+// STONE PILLARS (entrance columns)
+// =====================================================
+function createPillar(x) {
+  const group = new THREE.Group();
+
+  // Base
+  const baseGeo = new THREE.BoxGeometry(1.8, 0.4, 1.8);
+  const baseMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.stone, roughness: 0.7 });
+  const base = new THREE.Mesh(baseGeo, baseMat);
+  base.position.y = 0.2;
+  base.castShadow = true;
+  base.receiveShadow = true;
+  group.add(base);
+
+  // Column
+  const colGeo = new THREE.BoxGeometry(1.4, 5, 1.4);
+  const colMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.stone, roughness: 0.7 });
+  const col = new THREE.Mesh(colGeo, colMat);
+  col.position.y = 2.9;
+  col.castShadow = true;
+  col.receiveShadow = true;
+  group.add(col);
+
+  // Cap
+  const capGeo = new THREE.BoxGeometry(1.8, 0.3, 1.8);
+  const capMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.stone, roughness: 0.6 });
+  const cap = new THREE.Mesh(capGeo, capMat);
+  cap.position.y = 5.55;
+  cap.castShadow = true;
+  group.add(cap);
+
+  // Light fixture on top
+  const fixtureGeo = new THREE.CylinderGeometry(0.15, 0.2, 0.6, 8);
+  const fixtureMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.metal, roughness: 0.3, metalness: 0.7 });
+  const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
+  fixture.position.y = 6.0;
+  fixture.castShadow = true;
+  group.add(fixture);
+
+  // Light bulb glow
+  const glowGeo = new THREE.SphereGeometry(0.12, 8, 8);
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xff6b35,
+    emissive: 0xff6b35,
+    emissiveIntensity: 0.3,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.y = 6.35;
+  group.add(glow);
+
+  // Point light
+  const pLight = new THREE.PointLight(0xff6b35, 0.3, 8);
+  pLight.position.y = 6.35;
+  pLight.castShadow = true;
+  group.add(pLight);
+
+  group.position.x = x;
+  group.userData = { baseMat, colMat, capMat, fixtureMat, glowMat, pLight, glow };
+  return group;
+}
+
+const leftPillar = createPillar(-3.5);
+const rightPillar = createPillar(3.5);
+scene.add(leftPillar);
+scene.add(rightPillar);
+
+// =====================================================
+// ENTRANCE SIGN (center, between pillars)
+// =====================================================
+const signGroup = new THREE.Group();
+
+// Sign backing
+const signGeo = new THREE.BoxGeometry(5.5, 1.8, 0.3);
+const signMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.sign, roughness: 0.6 });
+const signMesh = new THREE.Mesh(signGeo, signMat);
+signMesh.position.y = 3.8;
+signMesh.castShadow = true;
+signGroup.add(signMesh);
+
+// Sign text (raised letters)
+const textGeo = new THREE.BoxGeometry(4.8, 0.6, 0.08);
+const textMat = new THREE.MeshStandardMaterial({
+  color: COLORS.neglected.signText,
+  roughness: 0.3,
+  metalness: 0.5,
+  emissive: COLORS.neglected.signText,
+  emissiveIntensity: 0.05,
+});
+const textMesh = new THREE.Mesh(textGeo, textMat);
+textMesh.position.set(0, 3.9, 0.2);
+signGroup.add(textMesh);
+
+// Sign sub-text bar
+const subGeo = new THREE.BoxGeometry(3.5, 0.25, 0.06);
+const subMat = new THREE.MeshStandardMaterial({
+  color: COLORS.neglected.signText,
+  roughness: 0.4,
+  metalness: 0.4,
+});
+const subMesh = new THREE.Mesh(subGeo, subMat);
+subMesh.position.set(0, 3.35, 0.2);
+signGroup.add(subMesh);
+
+// Sign light (overhead)
+const signLight = new THREE.SpotLight(0xff6b35, 0.3, 10, Math.PI / 6, 0.5);
+signLight.position.set(0, 6.5, 1.5);
+signLight.target = signMesh;
+signLight.castShadow = true;
+signGroup.add(signLight);
+
+scene.add(signGroup);
+
+// =====================================================
+// WALLS (low entrance walls extending from pillars)
+// =====================================================
+function createWall(startX, length, direction) {
+  const wallGeo = new THREE.BoxGeometry(length, 2.5, 0.6);
+  const wallMat = new THREE.MeshStandardMaterial({ color: COLORS.neglected.stone, roughness: 0.7 });
+  const wall = new THREE.Mesh(wallGeo, wallMat);
+  wall.position.set(startX + (length / 2) * direction, 1.25, 0);
+  wall.castShadow = true;
+  wall.receiveShadow = true;
+  wall.userData = { mat: wallMat };
+  return wall;
+}
+
+const leftWall = createWall(-4.2, 8, -1);
+const rightWall = createWall(4.2, 8, 1);
+scene.add(leftWall);
+scene.add(rightWall);
+
+// =====================================================
+// WEEDS / VEGETATION (neglected state)
+// =====================================================
+const weeds = [];
+const weedPositions = [
+  [-2.5, 0, 1.5], [-1, 0, 2], [1.5, 0, 1.8], [2.8, 0, 1],
+  [-4, 0, 0.8], [4.2, 0, 1.2], [-1.5, 0, -0.5], [0.8, 0, -0.3],
+  [-3, 0, 2.5], [3.5, 0, 2.8], [-0.5, 0, 3], [2, 0, 3.5],
+  [-5, 0, 1], [5.5, 0, 0.5], [-2, 0, 0.3], [1, 0, 0.5],
+];
+
+weedPositions.forEach(pos => {
+  const height = 0.3 + Math.random() * 0.8;
+  const weedGeo = new THREE.ConeGeometry(0.15 + Math.random() * 0.2, height, 4);
+  const weedMat = new THREE.MeshStandardMaterial({
+    color: COLORS.neglected.weed,
+    roughness: 0.9,
+  });
+  const weed = new THREE.Mesh(weedGeo, weedMat);
+  weed.position.set(pos[0], height / 2, pos[2]);
+  weed.rotation.z = (Math.random() - 0.5) * 0.3;
+  weed.castShadow = true;
+  scene.add(weed);
+  weeds.push({ mesh: weed, origHeight: height, mat: weedMat });
+});
+
+// =====================================================
+// PRISTINE LANDSCAPING (bushes, flowers — appear as progress increases)
+// =====================================================
+const bushes = [];
+const bushPositions = [
+  [-2.5, 0, 1.2], [-1.5, 0, 1.5], [1.5, 0, 1.5], [2.5, 0, 1.2],
+  [-5, 0, 0.8], [-6, 0, 1], [5, 0, 0.8], [6, 0, 1],
+  [-3.5, 0, 2], [3.5, 0, 2],
+];
+
+bushPositions.forEach(pos => {
+  const size = 0.4 + Math.random() * 0.4;
+  const bushGeo = new THREE.SphereGeometry(size, 8, 8);
+  const bushMat = new THREE.MeshStandardMaterial({
+    color: 0x2d7a27,
+    roughness: 0.85,
+  });
+  const bush = new THREE.Mesh(bushGeo, bushMat);
+  bush.position.set(pos[0], 0, pos[2]);
+  bush.scale.set(0, 0, 0);
+  bush.castShadow = true;
+  scene.add(bush);
+  bushes.push({ mesh: bush, size });
+});
+
+// Flower accents
+const flowers = [];
+const flowerColors = [0xE63946, 0xD4A843, 0xffffff, 0xff69b4, 0x9b59b6];
+for (let i = 0; i < 24; i++) {
+  const side = i < 12 ? -1 : 1;
+  const x = side * (2 + Math.random() * 5);
+  const z = 0.5 + Math.random() * 3;
+  const flowerGeo = new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6);
+  const flowerMat = new THREE.MeshStandardMaterial({
+    color: flowerColors[Math.floor(Math.random() * flowerColors.length)],
+    emissive: flowerColors[Math.floor(Math.random() * flowerColors.length)],
+    emissiveIntensity: 0.1,
+    roughness: 0.7,
+  });
+  const flower = new THREE.Mesh(flowerGeo, flowerMat);
+  flower.position.set(x, 0.1, z);
+  flower.scale.set(0, 0, 0);
+  scene.add(flower);
+  flowers.push({ mesh: flower });
+}
+
+// =====================================================
+// PATH LIGHTS (pristine state — line the walkway)
+// =====================================================
+const pathLights = [];
+for (let i = 0; i < 6; i++) {
+  const side = i % 2 === 0 ? -1 : 1;
+  const z = 2 + i * 2.5;
+
+  const poleGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.8, 6);
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x8a7a5a, metalness: 0.6, roughness: 0.3 });
+  const pole = new THREE.Mesh(poleGeo, poleMat);
+  pole.position.set(side * 2.2, 0.4, z);
+  pole.scale.set(0, 0, 0);
+  scene.add(pole);
+
+  const lampGeo = new THREE.SphereGeometry(0.1, 8, 8);
+  const lampMat = new THREE.MeshStandardMaterial({
+    color: 0xfff4e0,
+    emissive: 0xfff4e0,
+    emissiveIntensity: 0,
+  });
+  const lamp = new THREE.Mesh(lampGeo, lampMat);
+  lamp.position.set(side * 2.2, 0.85, z);
+  lamp.scale.set(0, 0, 0);
+  scene.add(lamp);
+
+  const pLight = new THREE.PointLight(0xfff4e0, 0, 5);
+  pLight.position.set(side * 2.2, 0.85, z);
+  scene.add(pLight);
+
+  pathLights.push({ pole, lamp, lampMat, pLight });
+}
+
+// =====================================================
+// AMBIENT & DIRECTIONAL LIGHTING
+// =====================================================
+const ambientLight = new THREE.AmbientLight(0x111122, 0.3);
+scene.add(ambientLight);
+
+const moonLight = new THREE.DirectionalLight(0x4466aa, 0.2);
+moonLight.position.set(-10, 15, 10);
+moonLight.castShadow = true;
+moonLight.shadow.mapSize.set(2048, 2048);
+moonLight.shadow.camera.near = 0.5;
+moonLight.shadow.camera.far = 50;
+moonLight.shadow.camera.left = -20;
+moonLight.shadow.camera.right = 20;
+moonLight.shadow.camera.top = 20;
+moonLight.shadow.camera.bottom = -20;
+scene.add(moonLight);
+
+// Warm fill (appears in pristine state)
+const warmLight = new THREE.DirectionalLight(0xfff4e0, 0);
+warmLight.position.set(5, 10, 8);
+scene.add(warmLight);
+
+// =====================================================
+// PARTICLES (fireflies in neglected, golden dust in pristine)
+// =====================================================
+const particleCount = 80;
+const particleGeo = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleSpeeds = [];
+
+for (let i = 0; i < particleCount; i++) {
+  particlePositions[i * 3] = (Math.random() - 0.5) * 20;
+  particlePositions[i * 3 + 1] = 0.5 + Math.random() * 6;
+  particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 15;
+  particleSpeeds.push({
+    x: (Math.random() - 0.5) * 0.01,
+    y: (Math.random() - 0.5) * 0.005,
+    z: (Math.random() - 0.5) * 0.01,
+    phase: Math.random() * Math.PI * 2,
+  });
+}
+
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  color: 0x88ff44,
+  size: 0.06,
+  transparent: true,
+  opacity: 0.6,
+  blending: THREE.AdditiveBlending,
+});
+
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// =====================================================
+// STARS
+// =====================================================
+const starCount = 300;
+const starGeo = new THREE.BufferGeometry();
+const starPositions = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.random() * Math.PI * 0.4;
+  const r = 60 + Math.random() * 30;
+  starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+  starPositions[i * 3 + 1] = r * Math.cos(phi) + 10;
+  starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.7 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// =====================================================
+// UPDATE FUNCTION — applies progress to all elements
+// =====================================================
+function updateScene(t) {
+  const p = progress;
+  const time = performance.now() * 0.001;
+
+  // Sky & fog
+  scene.background = lerpColor(COLORS.neglected.sky, COLORS.pristine.sky, p);
+  scene.fog.color = lerpColor(COLORS.neglected.fog, COLORS.pristine.fog, p);
+  scene.fog.density = 0.025 - p * 0.012;
+
+  // Ground color
+  groundMat.color = lerpColor(COLORS.neglected.ground, COLORS.pristine.ground, p);
+
+  // Path cleanup
+  pathMat.color = lerpColor(new THREE.Color(0x444444), new THREE.Color(0x777777), p);
+  pathMat.roughness = 0.9 - p * 0.3;
+
+  // Stone pillars & walls — weather to polished
+  const stoneColor = lerpColor(COLORS.neglected.stone, COLORS.pristine.stone, p);
+  const stoneRoughness = 0.85 - p * 0.35;
+  [leftPillar, rightPillar].forEach(pillar => {
+    const d = pillar.userData;
+    d.baseMat.color.copy(stoneColor);
+    d.colMat.color.copy(stoneColor);
+    d.capMat.color.copy(stoneColor);
+    d.baseMat.roughness = stoneRoughness;
+    d.colMat.roughness = stoneRoughness;
+    d.capMat.roughness = stoneRoughness;
+
+    // Metal fixtures
+    d.fixtureMat.color = lerpColor(COLORS.neglected.metal, COLORS.pristine.metal, p);
+    d.fixtureMat.roughness = 0.5 - p * 0.3;
+    d.fixtureMat.metalness = 0.5 + p * 0.3;
+
+    // Glow — flickering in neglected, warm steady in pristine
+    const flickerIntensity = (1 - p) * (0.2 + Math.sin(time * 8 + Math.random()) * 0.15 + Math.sin(time * 13) * 0.1);
+    const steadyIntensity = p * 1.2;
+    const totalGlowIntensity = flickerIntensity + steadyIntensity;
+
+    d.glowMat.emissive = lerpColor(COLORS.neglected.light, COLORS.pristine.light, p);
+    d.glowMat.emissiveIntensity = totalGlowIntensity;
+    d.glowMat.color = lerpColor(COLORS.neglected.light, COLORS.pristine.light, p);
+
+    d.pLight.color = lerpColor(COLORS.neglected.light, COLORS.pristine.light, p);
+    d.pLight.intensity = flickerIntensity * 2 + steadyIntensity * 3;
+    d.pLight.distance = 6 + p * 6;
+  });
+
+  // Walls
+  leftWall.userData.mat.color.copy(stoneColor);
+  leftWall.userData.mat.roughness = stoneRoughness;
+  rightWall.userData.mat.color.copy(stoneColor);
+  rightWall.userData.mat.roughness = stoneRoughness;
+
+  // Sign
+  signMat.color = lerpColor(COLORS.neglected.sign, COLORS.pristine.sign, p);
+  signMat.roughness = 0.7 - p * 0.2;
+  textMat.color = lerpColor(COLORS.neglected.signText, COLORS.pristine.signText, p);
+  textMat.emissive = lerpColor(COLORS.neglected.signText, COLORS.pristine.signText, p);
+  textMat.emissiveIntensity = 0.05 + p * 0.6;
+  textMat.metalness = 0.3 + p * 0.5;
+  textMat.roughness = 0.5 - p * 0.3;
+  subMat.color = lerpColor(COLORS.neglected.signText, COLORS.pristine.signText, p);
+  subMat.emissive = lerpColor(COLORS.neglected.signText, COLORS.pristine.signText, p);
+  subMat.emissiveIntensity = 0.02 + p * 0.4;
+
+  // Sign light
+  const signFlicker = (1 - p) * (0.2 + Math.sin(time * 6) * 0.15);
+  const signSteady = p * 2.5;
+  signLight.intensity = signFlicker + signSteady;
+  signLight.color = lerpColor(COLORS.neglected.light, COLORS.pristine.light, p);
+
+  // Weeds — shrink and disappear
+  weeds.forEach((w, i) => {
+    const weedProgress = Math.max(0, 1 - p * 2.5 + i * 0.05);
+    const scale = Math.max(0, weedProgress);
+    w.mesh.scale.set(scale, scale, scale);
+    w.mesh.position.y = (w.origHeight / 2) * scale;
+    w.mat.color = lerpColor(COLORS.neglected.weed, COLORS.pristine.weed, p);
+    // Sway in neglected state
+    w.mesh.rotation.z = Math.sin(time * 2 + i) * 0.1 * scale;
+  });
+
+  // Bushes — grow in
+  bushes.forEach((b, i) => {
+    const bushProgress = Math.max(0, Math.min(1, (p - 0.3 - i * 0.03) * 3));
+    const s = bushProgress * b.size * 2;
+    b.mesh.scale.set(s, s * 0.7, s);
+    b.mesh.position.y = s * 0.3;
+    // Gentle sway
+    b.mesh.rotation.y = Math.sin(time * 0.5 + i) * 0.05;
+  });
+
+  // Flowers — pop in
+  flowers.forEach((f, i) => {
+    const flowerProgress = Math.max(0, Math.min(1, (p - 0.5 - i * 0.01) * 4));
+    const s = flowerProgress;
+    f.mesh.scale.set(s, s, s);
+    f.mesh.position.y = 0.1 + s * 0.15 + Math.sin(time * 2 + i * 0.5) * 0.02 * s;
+  });
+
+  // Path lights — appear in pristine
+  pathLights.forEach((pl, i) => {
+    const plProgress = Math.max(0, Math.min(1, (p - 0.4 - i * 0.05) * 3));
+    pl.pole.scale.set(plProgress, plProgress, plProgress);
+    pl.lamp.scale.set(plProgress, plProgress, plProgress);
+    pl.lampMat.emissiveIntensity = plProgress * 1.5;
+    pl.pLight.intensity = plProgress * 0.8;
+  });
+
+  // Ambient & directional
+  ambientLight.intensity = 0.3 + p * 0.5;
+  ambientLight.color = lerpColor(new THREE.Color(0x111122), new THREE.Color(0x334466), p);
+  moonLight.intensity = 0.2 + p * 0.3;
+  warmLight.intensity = p * 0.6;
+  renderer.toneMappingExposure = 1.0 + p * 0.5;
+
+  // Particles
+  particleMat.color = lerpColor(new THREE.Color(0x88ff44), new THREE.Color(0xD4A843), p);
+  particleMat.size = 0.06 + p * 0.04;
+  particleMat.opacity = 0.4 + p * 0.3;
+  const positions = particleGeo.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    const s = particleSpeeds[i];
+    positions[i * 3] += s.x + Math.sin(time + s.phase) * 0.003;
+    positions[i * 3 + 1] += Math.sin(time * 0.5 + s.phase) * 0.003;
+    positions[i * 3 + 2] += s.z + Math.cos(time + s.phase) * 0.003;
+    // Wrap around
+    if (positions[i * 3] > 10) positions[i * 3] = -10;
+    if (positions[i * 3] < -10) positions[i * 3] = 10;
+    if (positions[i * 3 + 2] > 10) positions[i * 3 + 2] = -5;
+    if (positions[i * 3 + 2] < -5) positions[i * 3 + 2] = 10;
+  }
+  particleGeo.attributes.position.needsUpdate = true;
+
+  // Camera subtle movement
+  camera.position.x = Math.sin(time * 0.15) * 1.5;
+  camera.position.y = 5.5 + Math.sin(time * 0.1) * 0.5 + p * 1;
+  camera.lookAt(0, 2.5 + p * 0.5, 0);
+
+  // Stars twinkle
+  starMat.opacity = 0.5 + Math.sin(time * 0.3) * 0.2 + p * 0.2;
+}
+
+// =====================================================
+// UI CONTROLS
+// =====================================================
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const progressThumb = document.getElementById('progressThumb');
+const stateLabel = document.getElementById('stateLabel');
+const stateText = document.getElementById('stateText');
+const stateBadge = document.getElementById('stateBadge');
+
+let isDragging = false;
+
+function updateUI() {
+  const pct = progress * 100;
+  progressFill.style.width = pct + '%';
+  progressThumb.style.left = pct + '%';
+
+  if (progress < 0.33) {
+    stateText.textContent = 'Neglected';
+    stateBadge.style.background = '#E63946';
+    stateLabel.style.borderColor = 'rgba(230,57,70,0.3)';
+  } else if (progress < 0.66) {
+    stateText.textContent = 'Transforming...';
+    stateBadge.style.background = '#D4A843';
+    stateLabel.style.borderColor = 'rgba(212,168,67,0.3)';
+  } else {
+    stateText.textContent = 'The Sterling Standard';
+    stateBadge.style.background = '#6B9080';
+    stateLabel.style.borderColor = 'rgba(107,144,128,0.3)';
+  }
+}
+
+progressBar.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  autoPlay = false;
+  updateFromMouse(e);
+});
+window.addEventListener('mousemove', (e) => {
+  if (isDragging) updateFromMouse(e);
+});
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+// Touch support
+progressBar.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  autoPlay = false;
+  updateFromTouch(e);
+});
+window.addEventListener('touchmove', (e) => {
+  if (isDragging) updateFromTouch(e);
+});
+window.addEventListener('touchend', () => { isDragging = false; });
+
+function updateFromMouse(e) {
+  const rect = progressBar.getBoundingClientRect();
+  targetProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+}
+function updateFromTouch(e) {
+  const rect = progressBar.getBoundingClientRect();
+  targetProgress = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+}
+
+// Scroll control
+window.addEventListener('wheel', (e) => {
+  autoPlay = false;
+  targetProgress = Math.max(0, Math.min(1, targetProgress + e.deltaY * 0.001));
+}, { passive: true });
+
+// Double-click to toggle auto-play
+canvas.addEventListener('dblclick', () => {
+  autoPlay = !autoPlay;
+});
+
+// =====================================================
+// ANIMATION LOOP
+// =====================================================
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Auto-play: slowly oscillate
+  if (autoPlay) {
+    targetProgress += autoDir * 0.0015;
+    if (targetProgress >= 1) { targetProgress = 1; autoDir = -1; }
+    if (targetProgress <= 0) { targetProgress = 0; autoDir = 1; }
+  }
+
+  // Smooth lerp to target
+  progress += (targetProgress - progress) * 0.04;
+  progress = Math.max(0, Math.min(1, progress));
+
+  updateScene(performance.now());
+  updateUI();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>
