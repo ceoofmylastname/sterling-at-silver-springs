@@ -2377,6 +2377,8 @@
         <button class="btn btn--primary" style="width:100%" id="nlGenerateBtn" onclick="SSS.generateNewsletter()">Generate Newsletter</button>
       </div>
       <div id="nlPreview"></div>
+      <h4 style="font-weight:600;margin-top:var(--space-xl);margin-bottom:var(--space-sm)">Published Newsletters</h4>
+      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Date</th><th>Audience</th><th>Actions</th></tr></thead><tbody id="nl-published-tbody"></tbody></table></div>
     </div>
 
     <!-- Settings Panel -->
@@ -2966,21 +2968,23 @@
           if (error) throw error;
           // Special handling for documents to show file management
           if (table === 'documents') {
-            if (tbody) tbody.innerHTML = (data||[]).map(d => '<tr><td><strong>' + esc(d.name) + '</strong></td><td>' + esc(d.category) + '</td><td>' + (d.file_url ? (d.file_url.includes('supabase') ? '📎 Uploaded' : '🔗 Link') : '—') + '</td><td>—</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.adminEdit(\'documents\',\'' + d.id + '\')">Edit</button>' + (d.file_url && d.file_url.includes('supabase') ? '<button class="admin-btn admin-btn--danger" onclick="SSS.deleteDocument(\'' + d.id + '\',\'' + esc(d.name) + '\',\'' + esc(d.file_url) + '\')">Delete</button>' : '<button class="admin-btn admin-btn--danger" onclick="SSS.adminToggle(\'documents\',\'' + d.id + '\',' + !d.is_active + ')">' + (d.is_active ? 'Disable' : 'Enable') + '</button>') + '</td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No documents.</td></tr>';
+            if (tbody) tbody.innerHTML = (data||[]).map(d => '<tr><td><strong>' + esc(d.name) + '</strong></td><td>' + esc(d.category) + '</td><td>' + (d.file_url ? (d.file_url.includes('supabase') ? '📎 Uploaded' : '🔗 Link') : '—') + '</td><td>—</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.adminEdit(\'documents\',\'' + d.id + '\')">Edit</button><button class="admin-btn" onclick="SSS.adminToggle(\'documents\',\'' + d.id + '\',' + !d.is_active + ')">' + (d.is_active ? 'Disable' : 'Enable') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.deleteDocument(\'' + d.id + '\',\'' + esc(d.name) + '\',\'' + esc(d.file_url) + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No documents.</td></tr>';
           } else {
-            if (tbody) tbody.innerHTML = (data||[]).map(row => '<tr>' + cellFn(row).map(v => '<td>' + v + '</td>').join('') + '<td class="admin-actions"><button class="admin-btn" onclick="SSS.adminEdit(\'' + table + '\',\'' + row.id + '\')">Edit</button><button class="admin-btn admin-btn--danger" onclick="SSS.adminToggle(\'' + table + '\',\'' + row.id + '\',' + !(row.is_active ?? row.is_published ?? true) + ')">' + ((row.is_active ?? row.is_published ?? true) ? 'Disable' : 'Enable') + '</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No items.</td></tr>';
+            if (tbody) tbody.innerHTML = (data||[]).map(row => '<tr>' + cellFn(row).map(v => '<td>' + v + '</td>').join('') + '<td class="admin-actions"><button class="admin-btn" onclick="SSS.adminEdit(\'' + table + '\',\'' + row.id + '\')">Edit</button><button class="admin-btn" onclick="SSS.adminToggle(\'' + table + '\',\'' + row.id + '\',' + !(row.is_active ?? row.is_published ?? true) + ')">' + ((row.is_active ?? row.is_published ?? true) ? 'Disable' : 'Enable') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'' + table + '\',\'' + row.id + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No items.</td></tr>';
           }
         } else if (tab === 'requests') {
           const data = await DS.getRequests();
-          if (tbody) tbody.innerHTML = (data||[]).map(r => '<tr><td>' + fmtDate(r.submitted_at) + '</td><td><strong>' + esc(r.resident_name) + '</strong></td><td>' + esc(r.topic) + '</td><td>' + esc(r.subject) + '</td><td><span class="status-badge status-badge--' + r.status + '">' + r.status + '</span></td><td><select onchange="SSS.updateStatus(\'resident_requests\',\'' + r.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','in_review','in_progress','resolved','closed'].map(s => '<option' + (r.status===s?' selected':'') + '>' + s + '</option>').join('') + '</select></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No requests.</td></tr>';
+          if (tbody) tbody.innerHTML = (data||[]).map(r => '<tr><td>' + fmtDate(r.submitted_at) + '</td><td><strong>' + esc(r.resident_name) + '</strong></td><td>' + esc(r.topic) + '</td><td>' + esc(r.subject) + '</td><td><span class="status-badge status-badge--' + r.status + '">' + r.status + '</span></td><td style="display:flex;gap:4px;align-items:center"><select onchange="SSS.updateStatus(\'resident_requests\',\'' + r.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','in_review','in_progress','resolved','closed'].map(s => '<option' + (r.status===s?' selected':'') + '>' + s + '</option>').join('') + '</select><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'resident_requests\',\'' + r.id + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No requests.</td></tr>';
         } else if (tab === 'suggestions-admin') {
           const data = await DS.getSuggestions();
-          if (tbody) tbody.innerHTML = (data||[]).map(s => '<tr><td>' + fmtDate(s.submitted_at) + '</td><td>' + esc(s.name||'Anonymous') + '</td><td>' + esc(s.category) + '</td><td>' + esc(s.suggestion).substring(0,60) + (s.suggestion.length>60?'...':'') + '</td><td><span class="status-badge status-badge--' + s.status + '">' + s.status + '</span></td><td><select onchange="SSS.updateStatus(\'suggestions\',\'' + s.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','reviewed','in_progress','implemented','declined'].map(st => '<option' + (s.status===st?' selected':'') + '>' + st + '</option>').join('') + '</select></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No suggestions.</td></tr>';
+          if (tbody) tbody.innerHTML = (data||[]).map(s => '<tr><td>' + fmtDate(s.submitted_at) + '</td><td>' + esc(s.name||'Anonymous') + '</td><td>' + esc(s.category) + '</td><td>' + esc(s.suggestion).substring(0,60) + (s.suggestion.length>60?'...':'') + '</td><td><span class="status-badge status-badge--' + s.status + '">' + s.status + '</span></td><td style="display:flex;gap:4px;align-items:center"><select onchange="SSS.updateStatus(\'suggestions\',\'' + s.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','reviewed','in_progress','implemented','declined'].map(st => '<option' + (s.status===st?' selected':'') + '>' + st + '</option>').join('') + '</select><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'suggestions\',\'' + s.id + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No suggestions.</td></tr>';
         } else if (tab === 'settings') {
           const { data, error } = await SSS.supabase.from('site_settings').select('*').order('category');
           if (error) throw error;
           const cats = {}; (data||[]).forEach(s => (cats[s.category] = cats[s.category]||[]).push(s));
           if (content) content.innerHTML = Object.entries(cats).map(([cat, items]) => '<div style="margin-bottom:var(--space-lg)"><h4 style="font-family:var(--font-display);font-size:var(--text-md);color:var(--primary);margin-bottom:var(--space-sm);text-transform:capitalize">' + esc(cat) + '</h4>' + items.map(s => '<div class="form-field" style="margin-bottom:var(--space-sm)"><input type="text" class="form-field__input" value="' + esc(s.value||'') + '" placeholder=" " onchange="SSS.saveSetting(\'' + s.id + '\',this.value)"><label class="form-field__label">' + esc(s.label||s.key) + '</label></div>').join('') + '</div>').join('');
+        } else if (tab === 'newsletter') {
+          SSS.loadPublishedNewsletters();
         } else if (tab === 'adminusers') {
           SSS.loadAdminUsers();
         }
@@ -3060,6 +3064,43 @@
     const field = table === 'board_meetings' ? 'is_published' : 'is_active';
     const { error } = await SSS.supabase.from(table).update({ [field]: state }).eq('id', id);
     if (error) { toast('Update failed.', 'error'); return; } toast(state ? 'Enabled.' : 'Disabled.'); Admin.loadTab(Admin.tab);
+  };
+  SSS.adminDelete = async function(table, id) {
+    if (!confirm('Are you sure you want to permanently delete this item? This cannot be undone.')) return;
+    try {
+      const { error } = await SSS.supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+      toast('Item deleted.');
+      Admin.loadTab(Admin.tab);
+    } catch(e) {
+      toast('Delete failed: ' + e.message, 'error');
+    }
+  };
+  SSS.loadPublishedNewsletters = async function() {
+    const tbody = $('nl-published-tbody');
+    if (!tbody) return;
+    showLoading(tbody);
+    try {
+      const { data, error } = await SSS.supabase.from('newsletters').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      tbody.innerHTML = (data||[]).map(nl => {
+        const ai = nl.ai_content || {};
+        return '<tr><td><strong>' + esc(ai.headline || nl.title) + '</strong></td><td>' + fmtDate(nl.published_at || nl.created_at) + '</td><td>' + esc(nl.audience || '—') + '</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.showNL(\'' + nl.id + '\')">View</button><button class="admin-btn" onclick="SSS.adminToggle(\'newsletters\',\'' + nl.id + '\',' + !nl.is_published + ')">' + (nl.is_published ? 'Unpublish' : 'Publish') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.deleteNewsletter(\'' + nl.id + '\')">Delete</button></td></tr>';
+      }).join('') || '<tr><td colspan="99" class="dyn-empty">No newsletters published yet.</td></tr>';
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="99" class="dyn-error">Failed to load newsletters.</td></tr>';
+    }
+  };
+  SSS.deleteNewsletter = async function(id) {
+    if (!confirm('Permanently delete this newsletter? This cannot be undone.')) return;
+    try {
+      const { error } = await SSS.supabase.from('newsletters').delete().eq('id', id);
+      if (error) throw error;
+      toast('Newsletter deleted.');
+      SSS.loadPublishedNewsletters();
+    } catch(e) {
+      toast('Delete failed: ' + e.message, 'error');
+    }
   };
   SSS.updateStatus = async function(table, id, status) {
     const { error } = await SSS.supabase.from(table).update({ status }).eq('id', id);
