@@ -16,31 +16,33 @@ serve(async (req) => {
   }
 
   try {
-    // Verify the caller is authenticated
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Not authenticated' }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create a client with the caller's token to verify they're a valid user
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
-    if (callerError || !caller) {
+    // Extract JWT token from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token) {
+      console.error('No auth token provided');
       return new Response(
-        JSON.stringify({ error: 'Invalid session' }),
+        JSON.stringify({ error: 'Not authenticated — no token provided' }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Use service role client to verify the caller's token
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: { user: caller }, error: callerError } = await adminClient.auth.getUser(token);
+    if (callerError || !caller) {
+      console.error('Token verification failed:', callerError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid session — please log out and log back in' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log('Verified caller:', caller.email);
 
     // Parse request
     const { email, displayName } = await req.json();
@@ -51,9 +53,9 @@ serve(async (req) => {
       );
     }
 
-    // Use service role client to create the user
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('Creating admin user:', email);
 
+    // Create the new user with service role privileges
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email: email,
       password: 'Password123!',
@@ -61,12 +63,14 @@ serve(async (req) => {
     });
 
     if (createError) {
-      console.error('Create user error:', createError);
+      console.error('Create user error:', createError.message);
       return new Response(
         JSON.stringify({ error: createError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log('Auth user created:', newUser.user?.id);
 
     // Insert into admin_users table
     const { error: dbError } = await adminClient.from('admin_users').insert([{
@@ -76,7 +80,7 @@ serve(async (req) => {
     }]);
 
     if (dbError) {
-      console.warn('admin_users insert warning:', dbError);
+      console.warn('admin_users insert warning:', dbError.message);
     }
 
     // Log the activity
@@ -87,13 +91,15 @@ serve(async (req) => {
       details: 'Added ' + email
     }]);
 
+    console.log('Admin user created successfully:', email);
+
     return new Response(
       JSON.stringify({ success: true, userId: newUser.user?.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Create admin error:", error);
+    console.error("Create admin error:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

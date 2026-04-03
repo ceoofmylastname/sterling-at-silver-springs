@@ -3307,13 +3307,15 @@
     const name = $('invite-name')?.value.trim();
     if (!email || !email.includes('@')) { toast('Valid email required.', 'error'); return; }
     try {
+      // Get fresh session token
+      const { data: { session } } = await SSS.supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('You must be logged in to add admins.');
       // Call Edge Function with service role key to create the user
-      const token = SSS.session?.access_token;
       const res = await fetch(EDGE_URL + '/create-admin-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
+          'Authorization': 'Bearer ' + session.access_token,
           'apikey': SB_KEY
         },
         body: JSON.stringify({ email: email, displayName: name || '' })
