@@ -3307,23 +3307,21 @@
     const name = $('invite-name')?.value.trim();
     if (!email || !email.includes('@')) { toast('Valid email required.', 'error'); return; }
     try {
-      // Create auth user with default password
-      const { data: signUpData, error: signUpError } = await SSS.supabase.auth.signUp({
-        email: email,
-        password: 'Password123!'
+      // Call Edge Function with service role key to create the user
+      const token = SSS.session?.access_token;
+      const res = await fetch(EDGE_URL + '/create-admin-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+          'apikey': SB_KEY
+        },
+        body: JSON.stringify({ email: email, displayName: name || '' })
       });
-      if (signUpError) throw signUpError;
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Failed to create admin');
 
-      // Register in admin_users table
-      const { error: dbError } = await SSS.supabase.from('admin_users').insert([{
-        email: email,
-        display_name: name || null,
-        added_by: SSS.getAdminEmail()
-      }]);
-      if (dbError) throw dbError;
-
-      await SSS.logActivity('Added admin', 'admin_users', null, 'Added ' + email + (name ? ' (' + name + ')' : ''));
-      toast('Admin account created for ' + email + '!');
+      toast('Admin account created for ' + email + '! Default password: Password123!');
       closeModal();
       SSS.loadAdminUsers();
     } catch(e) {
