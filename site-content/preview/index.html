@@ -3321,7 +3321,7 @@
         body: JSON.stringify({ email: email, displayName: name || '' })
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Failed to create admin');
+      if (!res.ok) throw new Error(result.error || result.message || 'Unknown error');
 
       toast('Admin account created for ' + email + '! Default password: Password123!');
       closeModal();
