@@ -2393,10 +2393,15 @@
     <div class="admin-panel" id="admin-adminusers">
       <div class="admin-toolbar">
         <h4 style="font-weight:600">Admin Users</h4>
-        <button class="btn btn--primary btn--sm" onclick="SSS.showInviteAdmin()">+ Invite Admin</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn--primary btn--sm" onclick="SSS.showAddAdmin()">+ Add Admin</button>
+          <button class="btn btn--outline btn--sm" onclick="SSS.showChangePassword()">Change Password</button>
+        </div>
       </div>
-      <p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md);padding:0 var(--space-md)">Manage administrator access to this dashboard. Invited users will receive an email to set their password.</p>
-      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Email</th><th>Created</th><th>Last Sign In</th><th>Actions</th></tr></thead><tbody id="admin-users-tbody"></tbody></table></div>
+      <p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md);padding:0 var(--space-md)">Manage admin access. Default password: <code style="background:var(--bg-alt);padding:2px 6px;border-radius:4px">Password123!</code> — admins should change their password after first login.</p>
+      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Added By</th><th>Date Added</th><th>Actions</th></tr></thead><tbody id="admin-users-tbody"></tbody></table></div>
+      <h4 style="font-weight:600;margin-top:var(--space-xl);margin-bottom:var(--space-sm)">Activity Log</h4>
+      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Details</th></tr></thead><tbody id="admin-activity-tbody"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -3063,13 +3068,16 @@
   SSS.adminToggle = async function(table, id, state) {
     const field = table === 'board_meetings' ? 'is_published' : 'is_active';
     const { error } = await SSS.supabase.from(table).update({ [field]: state }).eq('id', id);
-    if (error) { toast('Update failed.', 'error'); return; } toast(state ? 'Enabled.' : 'Disabled.'); Admin.loadTab(Admin.tab);
+    if (error) { toast('Update failed.', 'error'); return; }
+    await SSS.logActivity(state ? 'Enabled' : 'Disabled', table, id, (state ? 'Enabled' : 'Disabled') + ' item in ' + table);
+    toast(state ? 'Enabled.' : 'Disabled.'); Admin.loadTab(Admin.tab);
   };
   SSS.adminDelete = async function(table, id) {
     if (!confirm('Are you sure you want to permanently delete this item? This cannot be undone.')) return;
     try {
       const { error } = await SSS.supabase.from(table).delete().eq('id', id);
       if (error) throw error;
+      await SSS.logActivity('Deleted', table, id, 'Permanently deleted item from ' + table);
       toast('Item deleted.');
       Admin.loadTab(Admin.tab);
     } catch(e) {
@@ -3096,6 +3104,7 @@
     try {
       const { error } = await SSS.supabase.from('newsletters').delete().eq('id', id);
       if (error) throw error;
+      await SSS.logActivity('Deleted newsletter', 'newsletters', id, 'Permanently deleted newsletter');
       toast('Newsletter deleted.');
       SSS.loadPublishedNewsletters();
     } catch(e) {
@@ -3104,11 +3113,14 @@
   };
   SSS.updateStatus = async function(table, id, status) {
     const { error } = await SSS.supabase.from(table).update({ status }).eq('id', id);
-    if (error) { toast('Status update failed.', 'error'); return; } toast('Status updated.');
+    if (error) { toast('Status update failed.', 'error'); return; }
+    await SSS.logActivity('Updated status', table, id, 'Changed status to ' + status);
+    toast('Status updated.');
   };
   SSS.saveSetting = async function(id, value) {
     const { error } = await SSS.supabase.from('site_settings').update({ value }).eq('id', id);
     if (error) { toast('Save failed.', 'error'); return; }
+    await SSS.logActivity('Updated setting', 'site_settings', id, 'Changed setting "' + id + '" to "' + value + '"');
     SSS.cache.settings = null; toast('Setting saved.'); loadGlobalData();
   };
   SSS.closeModal = closeModal;
@@ -3117,8 +3129,15 @@
     const d = {};
     for (const f of fields) { const el = $('modal-' + f.k); if (!el) continue; if (f.t === 'checkbox') d[f.k] = el.checked; else if (f.t === 'number') d[f.k] = parseInt(el.value) || 0; else d[f.k] = el.value; }
     try {
-      if (id) { const { error } = await SSS.supabase.from(table).update(d).eq('id', id); if (error) throw error; toast('Updated!'); }
-      else { const { error } = await SSS.supabase.from(table).insert([d]); if (error) throw error; toast('Created!'); }
+      if (id) {
+        const { error } = await SSS.supabase.from(table).update(d).eq('id', id); if (error) throw error;
+        await SSS.logActivity('Updated', table, id, 'Updated ' + (d.title || d.name || d.question || d.service || d.label || 'item'));
+        toast('Updated!');
+      } else {
+        const { error } = await SSS.supabase.from(table).insert([d]); if (error) throw error;
+        await SSS.logActivity('Created', table, null, 'Created ' + (d.title || d.name || d.question || d.service || d.label || 'item') + ' in ' + table);
+        toast('Created!');
+      }
       closeModal(); Admin.loadTab(Admin.tab);
     } catch(e) { toast('Save failed: ' + e.message, 'error'); }
   };
@@ -3208,6 +3227,7 @@
         published_at: new Date().toISOString()
       }]);
       if (error) throw error;
+      await SSS.logActivity('Published newsletter', 'newsletters', null, 'Published: ' + (nl.title || 'Untitled'));
       toast('Newsletter published! Visible on Newsletters page.', 'success');
       SSS._pendingNL = null;
       $('nlPreview').innerHTML = '<div style="padding:var(--space-xl);text-align:center;background:var(--bg-alt);border-radius:var(--radius-lg)"><div style="font-size:48px;margin-bottom:var(--space-md)">✅</div><h4 style="color:var(--primary);margin-bottom:8px">Newsletter Published!</h4><p style="color:var(--text-muted)">Your newsletter is now live on the Newsletters page.</p></div>';
@@ -3230,59 +3250,122 @@
   };
 
   // === ADMIN USER MANAGEMENT ===
+  SSS.getAdminEmail = function() {
+    return SSS.session?.user?.email || 'unknown';
+  };
+
+  SSS.logActivity = async function(action, tableName, recordId, details) {
+    try {
+      await SSS.supabase.from('admin_activity_log').insert([{
+        admin_email: SSS.getAdminEmail(),
+        action: action,
+        table_name: tableName || null,
+        record_id: recordId || null,
+        details: details || null
+      }]);
+    } catch(e) { console.error('Activity log error:', e); }
+  };
+
   SSS.loadAdminUsers = async function() {
     const tbody = $('admin-users-tbody'); if (!tbody) return;
     showLoading(tbody);
     try {
-      const { data, error } = await SSS.supabase.auth.admin.listUsers();
+      const { data, error } = await SSS.supabase.from('admin_users').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      if (!data || !data.users || data.users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="dyn-empty">No admin users yet.</td></tr>';
-        return;
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="dyn-empty">No admin users registered yet.</td></tr>';
+      } else {
+        tbody.innerHTML = data.map(u => {
+          return '<tr><td><strong>' + esc(u.email) + '</strong></td><td>' + esc(u.display_name || '—') + '</td><td>' + esc(u.added_by || '—') + '</td><td>' + fmtDate(u.created_at) + '</td><td class="admin-actions"><button class="admin-btn admin-btn--danger" onclick="SSS.removeAdmin(\'' + u.id + '\',\'' + esc(u.email) + '\')">Remove</button></td></tr>';
+        }).join('');
       }
-      tbody.innerHTML = data.users.map(u => {
-        const created = fmtDate(u.created_at);
-        const lastSignIn = u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : 'Never';
-        return '<tr><td><strong>' + esc(u.email) + '</strong></td><td>' + created + '</td><td>' + lastSignIn + '</td><td class="admin-actions"><button class="admin-btn admin-btn--danger" onclick="SSS.deleteAdmin(\'' + u.id + '\',\'' + esc(u.email) + '\')">Delete</button></td></tr>';
-      }).join('');
     } catch(e) {
       console.error('Load admin users error:', e);
       showError(tbody, 'Failed to load admin users.');
     }
-  };
 
-  SSS.showInviteAdmin = function() {
-    let ov = $('adminModalOverlay');
-    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
-    const modal = $('adminModal');
-    modal.innerHTML = '<h3>Invite New Admin</h3><p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md)">The new admin will receive an email to set their password.</p><div class="form-field"><input type="email" class="form-field__input" id="invite-email" placeholder=" " required><label class="form-field__label" for="invite-email">Email Address *</label></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Cancel</button><button class="btn btn--primary btn--sm" onclick="SSS.inviteAdmin()">Send Invite</button></div>';
-    ov.classList.add('active');
-  };
-
-  SSS.inviteAdmin = async function() {
-    const emailInput = $('invite-email');
-    const email = emailInput?.value.trim();
-    if (!email || !email.includes('@')) { toast('Valid email required.', 'error'); return; }
-    try {
-      const { data, error } = await SSS.supabase.auth.admin.inviteUserByEmail(email);
-      if (error) throw error;
-      toast('Invite sent to ' + email + '!');
-      closeModal();
-      SSS.loadAdminUsers();
-    } catch(e) {
-      toast('Invite failed: ' + e.message, 'error');
+    // Load activity log
+    const actTbody = $('admin-activity-tbody');
+    if (actTbody) {
+      try {
+        const { data } = await SSS.supabase.from('admin_activity_log').select('*').order('created_at', { ascending: false }).limit(50);
+        actTbody.innerHTML = (data||[]).map(a => '<tr><td>' + fmtDate(a.created_at) + '</td><td><strong>' + esc(a.admin_email) + '</strong></td><td>' + esc(a.action) + '</td><td style="font-size:var(--text-xs)">' + esc(a.details || '—') + '</td></tr>').join('') || '<tr><td colspan="4" class="dyn-empty">No activity yet.</td></tr>';
+      } catch(e) { actTbody.innerHTML = '<tr><td colspan="4" class="dyn-empty">—</td></tr>'; }
     }
   };
 
-  SSS.deleteAdmin = async function(userId, email) {
-    if (!confirm('Delete admin access for ' + email + '? This cannot be undone.')) return;
+  SSS.showAddAdmin = function() {
+    let ov = $('adminModalOverlay');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
+    const modal = $('adminModal');
+    modal.innerHTML = '<h3>Add New Admin</h3><p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md)">Create a new admin account. They\'ll sign in with the default password <strong>Password123!</strong> and should change it after first login.</p><div class="form-field"><input type="email" class="form-field__input" id="invite-email" placeholder=" " required><label class="form-field__label" for="invite-email">Email Address *</label></div><div class="form-field"><input type="text" class="form-field__input" id="invite-name" placeholder=" "><label class="form-field__label" for="invite-name">Display Name</label></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Cancel</button><button class="btn btn--primary btn--sm" onclick="SSS.addAdmin()">Add Admin</button></div>';
+    ov.classList.add('active');
+  };
+
+  SSS.addAdmin = async function() {
+    const email = $('invite-email')?.value.trim();
+    const name = $('invite-name')?.value.trim();
+    if (!email || !email.includes('@')) { toast('Valid email required.', 'error'); return; }
     try {
-      const { error } = await SSS.supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
-      toast('Admin deleted.');
+      // Create auth user with default password
+      const { data: signUpData, error: signUpError } = await SSS.supabase.auth.signUp({
+        email: email,
+        password: 'Password123!'
+      });
+      if (signUpError) throw signUpError;
+
+      // Register in admin_users table
+      const { error: dbError } = await SSS.supabase.from('admin_users').insert([{
+        email: email,
+        display_name: name || null,
+        added_by: SSS.getAdminEmail()
+      }]);
+      if (dbError) throw dbError;
+
+      await SSS.logActivity('Added admin', 'admin_users', null, 'Added ' + email + (name ? ' (' + name + ')' : ''));
+      toast('Admin account created for ' + email + '!');
+      closeModal();
       SSS.loadAdminUsers();
     } catch(e) {
-      toast('Delete failed: ' + e.message, 'error');
+      toast('Failed: ' + e.message, 'error');
+    }
+  };
+
+  SSS.removeAdmin = async function(id, email) {
+    if (email === SSS.getAdminEmail()) { toast('Cannot remove yourself.', 'error'); return; }
+    if (!confirm('Remove admin access for ' + email + '?')) return;
+    try {
+      const { error } = await SSS.supabase.from('admin_users').delete().eq('id', id);
+      if (error) throw error;
+      await SSS.logActivity('Removed admin', 'admin_users', null, 'Removed ' + email);
+      toast('Admin removed.');
+      SSS.loadAdminUsers();
+    } catch(e) {
+      toast('Remove failed: ' + e.message, 'error');
+    }
+  };
+
+  SSS.showChangePassword = function() {
+    let ov = $('adminModalOverlay');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
+    const modal = $('adminModal');
+    modal.innerHTML = '<h3>Change Password</h3><p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md)">Logged in as: <strong>' + esc(SSS.getAdminEmail()) + '</strong></p><div class="form-field"><input type="password" class="form-field__input" id="new-password" placeholder=" " required><label class="form-field__label" for="new-password">New Password *</label></div><div class="form-field"><input type="password" class="form-field__input" id="confirm-password" placeholder=" " required><label class="form-field__label" for="confirm-password">Confirm New Password *</label></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Cancel</button><button class="btn btn--primary btn--sm" onclick="SSS.changePassword()">Update Password</button></div>';
+    ov.classList.add('active');
+  };
+
+  SSS.changePassword = async function() {
+    const newPw = $('new-password')?.value;
+    const confirmPw = $('confirm-password')?.value;
+    if (!newPw || newPw.length < 6) { toast('Password must be at least 6 characters.', 'error'); return; }
+    if (newPw !== confirmPw) { toast('Passwords do not match.', 'error'); return; }
+    try {
+      const { error } = await SSS.supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+      await SSS.logActivity('Changed password', null, null, 'Password updated');
+      toast('Password updated successfully!');
+      closeModal();
+    } catch(e) {
+      toast('Password change failed: ' + e.message, 'error');
     }
   };
 
@@ -3390,10 +3473,12 @@
         if (isNew) {
           const { error } = await SSS.supabase.from('documents').insert([data]);
           if (error) throw error;
+          await SSS.logActivity('Added document', 'documents', null, 'Added: ' + data.name);
           toast('Document added successfully!');
         } else {
           const { error } = await SSS.supabase.from('documents').update(data).eq('id', docData.id);
           if (error) throw error;
+          await SSS.logActivity('Updated document', 'documents', docData.id, 'Updated: ' + data.name);
           toast('Document updated successfully!');
         }
         modal.remove();
@@ -3423,6 +3508,7 @@
       const { error: dbError } = await SSS.supabase.from('documents').delete().eq('id', docId);
       if (dbError) throw dbError;
 
+      await SSS.logActivity('Deleted document', 'documents', docId, 'Deleted: ' + fileName);
       toast('Document deleted.');
       Admin.loadTab('documents');
     } catch(e) {
