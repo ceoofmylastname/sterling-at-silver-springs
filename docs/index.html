@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sterling at Silver Springs — Community Website Preview</title>
+  <title>Sterling at Silver Springs — Community Website</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -183,16 +183,6 @@
     }
     .sh--center { text-align: center; }
     .sh--center::after { left: 50%; transform: translateX(-50%); }
-
-    /* ============================================
-       PREVIEW BANNER
-       ============================================ */
-    .preview-bar {
-      background: var(--text); color: rgba(255,255,255,0.8);
-      text-align: center; padding: 8px 16px; font-size: var(--text-xs);
-      letter-spacing: 0.5px; position: sticky; top: 0; z-index: var(--z-toast);
-    }
-    .preview-bar b { color: var(--accent-light); }
 
     /* ============================================
        EMERGENCY BANNER
@@ -1363,11 +1353,6 @@
 
 <!-- Skip Nav -->
 <a href="#main-content" class="skip-link">Skip to main content</a>
-
-<!-- Preview Banner -->
-<div class="preview-bar">
-  <b>PREVIEW</b> — Visual mockup of the Sterling at Silver Springs website. Click to toggle emergency banner.
-</div>
 
 <!-- Emergency Banner -->
 <div class="alert-banner" id="alertBanner" role="alert">
@@ -2556,10 +2541,6 @@
   const btt = $('btt');
   window.addEventListener('scroll', () => { btt.classList.toggle('visible', window.scrollY > 400); }, { passive: true });
   btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-  // === PREVIEW BANNER ===
-  const previewBar = document.querySelector('.preview-bar');
-  if (previewBar) previewBar.addEventListener('click', () => { $('alertBanner').classList.toggle('active'); });
 
   // === ACCORDION (initial static ones) ===
   document.querySelectorAll('.accordion__trigger').forEach(trigger => {
