@@ -1451,7 +1451,7 @@
         <span class="hero__stat-label">Homes</span>
       </div>
       <div class="hero__stat">
-        <span class="hero__stat-number" data-count="2026" id="dyn-stat-year">0</span>
+        <span class="hero__stat-number" data-count="2026" data-no-comma id="dyn-stat-year">0</span>
         <span class="hero__stat-label">Est. Year</span>
       </div>
       <div class="hero__stat">
@@ -2530,7 +2530,8 @@
   // === COUNT UP ===
   function countUp(el) {
     const target = parseInt(el.dataset.count); const dur = 2000; const start = performance.now();
-    (function update(now) { const p = Math.min((now - start) / dur, 1); el.textContent = Math.round(target * (1 - Math.pow(1-p, 3))).toLocaleString(); if (p < 1) requestAnimationFrame(update); })(start);
+    const noComma = el.dataset.noComma !== undefined;
+    (function update(now) { const p = Math.min((now - start) / dur, 1); const val = Math.round(target * (1 - Math.pow(1-p, 3))); el.textContent = noComma ? String(val) : val.toLocaleString(); if (p < 1) requestAnimationFrame(update); })(start);
   }
   const countObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => { if (entry.isIntersecting) { countUp(entry.target); countObserver.unobserve(entry.target); } });
