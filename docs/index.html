@@ -671,11 +671,11 @@
       border-bottom: 1px solid var(--border-light);
     }
     .contact-card__row:last-child { border-bottom: none; }
-    .contact-card__label { color: var(--text-muted); }
-    .contact-card__value { font-weight: 500; color: var(--text); }
+    .contact-card__label { color: var(--text-muted); flex-shrink: 0; }
+    .contact-card__value { font-weight: 500; color: var(--text); text-align: right; }
     .board-member { cursor: pointer; transition: background var(--dur); }
     .board-member:hover { background: var(--bg-alt); }
-    .board-member__header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .board-member__header { display: flex; align-items: center; justify-content: flex-end; gap: 8px; text-align: right; }
     .board-member__name { font-weight: 500; color: var(--text); }
     .board-member__chevron { font-size: 10px; color: var(--text-muted); transition: transform var(--dur); }
     .board-member.active .board-member__chevron { transform: rotate(180deg); }
