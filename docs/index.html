@@ -210,21 +210,21 @@
     .nav__inner {
       max-width: var(--max-w); margin: 0 auto;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 var(--space-md); height: var(--nav-h);
+      padding: 8px var(--space-md); min-height: var(--nav-h);
     }
     .nav__brand {
       display: flex; align-items: center; gap: 12px;
       text-decoration: none; color: var(--text); flex-shrink: 0;
     }
     .nav__logo {
-      height: 80px; width: auto; max-width: 320px;
+      height: 110px; width: auto; max-width: 400px;
       display: block; object-fit: contain; flex-shrink: 0;
     }
     @media (max-width: 768px) {
-      .nav__logo { height: 70px; max-width: 280px; }
+      .nav__logo { height: 90px; max-width: 340px; }
     }
     @media (max-width: 480px) {
-      .nav__logo { height: 60px; max-width: 240px; }
+      .nav__logo { height: 75px; max-width: 280px; }
     }
     .nav__brand-text {
       font-family: var(--font-display); font-size: clamp(1rem, 0.85rem + 0.75vw, 1.25rem);
