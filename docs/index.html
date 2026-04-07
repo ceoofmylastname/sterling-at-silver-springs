@@ -2909,6 +2909,7 @@
     const btn = $('submitBtn'); btn.disabled = true; btn.textContent = 'Submitting...';
     try {
       await DS.submitRequest({ resident_name: name, email, phone, address, topic, subject, description, contact_method: method });
+      fetch(EDGE_URL + '/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY }, body: JSON.stringify({ type: 'request', data: { resident_name: name, email, phone, address, topic, subject, description, contact_method: method } }) }).catch(function(){});
       toast('Request submitted! You will receive a confirmation.'); ['f-name','f-email','f-phone','f-addr','f-topic','f-subject','f-desc','f-method'].forEach(id => { const el = $(id); if (el) el.value = ''; });
     } catch(e) { toast('Submit failed: ' + e.message, 'error'); } finally { btn.disabled = false; btn.textContent = 'Submit Request'; }
   });
@@ -2923,6 +2924,7 @@
     const btn = $('suggestBtn'); btn.disabled = true; btn.textContent = 'Submitting...';
     try {
       await DS.submitSuggestion({ name: name || null, category, suggestion, wants_response: wantsResponse, email: email || null });
+      fetch(EDGE_URL + '/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY }, body: JSON.stringify({ type: 'suggestion', data: { name: name || null, category, suggestion, wants_response: wantsResponse, email: email || null } }) }).catch(function(){});
       toast('Suggestion submitted! Thank you.'); ['s-name','s-cat','s-idea','s-resp','s-email'].forEach(id => { const el = $(id); if (el) el.value = ''; });
     } catch(e) { toast('Submit failed: ' + e.message, 'error'); } finally { btn.disabled = false; btn.textContent = 'Submit Suggestion'; }
   });
