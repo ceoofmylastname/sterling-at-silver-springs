@@ -1848,13 +1848,6 @@
       </div>
     </div>
 
-    <h2 class="section__title sr" style="margin-top:var(--space-xl)">Meeting Minutes</h2>
-    <div class="section__accent-line"></div>
-    <div class="placeholder placeholder--glass sr">
-      <div class="placeholder__icon--svg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
-      <strong>Google Drive Embed — Meeting Minutes Archive</strong>
-      <small>Organized by year. Click any file to view or download.</small>
-    </div>
   </div>
 </div>
 
@@ -2138,7 +2131,6 @@
     <p class="sr" style="color:var(--text-light);font-size:var(--text-sm)">We read every suggestion. Here are some resident ideas that became reality:</p>
     <div class="sr">
       <div class="win-item"><span class="badge badge--new">DONE</span><span>Added a dog waste station near the walking trail</span></div>
-      <div class="win-item"><span class="badge badge--new">DONE</span><span>Publish meeting minutes on the website</span></div>
       <div class="win-item"><span class="badge badge--updated">IN PROGRESS</span><span>Community book club</span></div>
     </div>
     <p style="margin-top:var(--space-md);font-size:var(--text-sm);font-style:italic;color:var(--text-muted)">Your suggestion could be next!</p>
@@ -2707,7 +2699,7 @@
     meetingsTable(meetings) {
       if (!meetings.length) return '<div class="dyn-empty">No meetings scheduled.</div>';
       return '<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Location</th><th>Materials</th></tr></thead><tbody>' + meetings.map(m => {
-        const links = []; if (m.agenda_url) links.push('<a href="' + esc(m.agenda_url) + '" target="_blank" rel="noopener">Agenda</a>'); if (m.minutes_url) links.push('<a href="' + esc(m.minutes_url) + '" target="_blank" rel="noopener">Minutes</a>');
+        const links = []; if (m.agenda_url) links.push('<a href="' + esc(m.agenda_url) + '" target="_blank" rel="noopener">Agenda</a>');
         return '<tr><td><strong>' + fmtDate(m.meeting_date) + '</strong></td><td>' + fmtTime(m.meeting_time) + '</td><td>' + esc(m.location || 'TBD') + '</td><td>' + (links.join(' | ') || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     },
@@ -3004,7 +2996,7 @@
   // === EDIT MODAL ===
   const tableFields = {
     announcements: [{k:'title',l:'Title',t:'text',r:1},{k:'content',l:'Content',t:'textarea',r:1},{k:'badge',l:'Badge',t:'select',o:['new','updated','urgent','none']},{k:'is_featured',l:'Featured?',t:'checkbox'},{k:'is_active',l:'Active',t:'checkbox'}],
-    board_meetings: [{k:'meeting_date',l:'Date',t:'date',r:1},{k:'meeting_time',l:'Time',t:'time',r:1},{k:'location',l:'Location',t:'text'},{k:'virtual_link',l:'Virtual Link',t:'text'},{k:'agenda_url',l:'Agenda URL',t:'text'},{k:'minutes_url',l:'Minutes URL',t:'text'},{k:'notes',l:'Notes',t:'textarea'},{k:'is_published',l:'Published',t:'checkbox'}],
+    board_meetings: [{k:'meeting_date',l:'Date',t:'date',r:1},{k:'meeting_time',l:'Time',t:'time',r:1},{k:'location',l:'Location',t:'text'},{k:'virtual_link',l:'Virtual Link',t:'text'},{k:'agenda_url',l:'Agenda URL',t:'text'},{k:'notes',l:'Notes',t:'textarea'},{k:'is_published',l:'Published',t:'checkbox'}],
     activities: [{k:'name',l:'Name',t:'text',r:1},{k:'schedule',l:'Schedule',t:'text',r:1},{k:'location',l:'Location',t:'text',r:1},{k:'description',l:'Description',t:'textarea'},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
     events: [{k:'title',l:'Title',t:'text',r:1},{k:'description',l:'Description',t:'textarea'},{k:'start_datetime',l:'Start Date & Time',t:'datetime-local',r:1},{k:'end_datetime',l:'End Date & Time',t:'datetime-local'},{k:'location',l:'Location',t:'text'},{k:'category',l:'Category',t:'select',o:['board','committee','community','maintenance','deadline'],r:1},{k:'is_active',l:'Active',t:'checkbox'}],
     board_members: [{k:'role',l:'Role',t:'text',r:1},{k:'name',l:'Name',t:'text',r:1},{k:'email',l:'Email',t:'email'},{k:'phone',l:'Phone',t:'tel'},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
