@@ -1250,6 +1250,21 @@
     }
     .admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
     .admin-table tr:hover td { background: var(--bg-alt); }
+    .admin-table .expand-row { cursor: pointer; }
+    .admin-table .expand-row:hover td { background: var(--bg-alt); }
+    .admin-table .expand-row td:first-child { position: relative; padding-left: 28px; }
+    .admin-table .expand-chevron { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-muted); transition: transform 0.3s ease; }
+    .admin-table .expand-row.open .expand-chevron { transform: translateY(-50%) rotate(180deg); }
+    .admin-table .expand-detail { display: none; }
+    .admin-table .expand-row.open + .expand-detail { display: table-row; }
+    .admin-table .expand-detail td { padding: 0; border-bottom: 1px solid var(--border-light); }
+    .expand-detail__inner { padding: 16px 28px 20px; background: var(--bg-alt); border-left: 4px solid var(--accent); animation: expandIn 0.3s ease; }
+    .expand-detail__label { font-size: var(--text-xs); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .expand-detail__text { font-size: var(--text-sm); color: var(--text); line-height: 1.75; word-wrap: break-word; white-space: pre-wrap; }
+    .expand-detail__meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: var(--text-xs); color: var(--text-light); }
+    .expand-detail__meta span { display: flex; align-items: center; gap: 4px; }
+    .truncate-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @keyframes expandIn { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
     .admin-actions { display: flex; gap: 6px; }
     .admin-btn {
       padding: 5px 10px; border-radius: var(--radius-sm);
@@ -2986,7 +3001,7 @@
           if (tbody) tbody.innerHTML = (data||[]).map(r => '<tr><td>' + fmtDate(r.submitted_at) + '</td><td><strong>' + esc(r.resident_name) + '</strong></td><td>' + esc(r.topic) + '</td><td>' + esc(r.subject) + '</td><td><span class="status-badge status-badge--' + r.status + '">' + r.status + '</span></td><td style="display:flex;gap:4px;align-items:center"><select onchange="SSS.updateStatus(\'resident_requests\',\'' + r.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','in_review','in_progress','resolved','closed'].map(s => '<option' + (r.status===s?' selected':'') + '>' + s + '</option>').join('') + '</select><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'resident_requests\',\'' + r.id + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No requests.</td></tr>';
         } else if (tab === 'suggestions-admin') {
           const data = await DS.getSuggestions();
-          if (tbody) tbody.innerHTML = (data||[]).map(s => '<tr><td>' + fmtDate(s.submitted_at) + '</td><td>' + esc(s.name||'Anonymous') + '</td><td>' + esc(s.category) + '</td><td>' + esc(s.suggestion).substring(0,60) + (s.suggestion.length>60?'...':'') + '</td><td><span class="status-badge status-badge--' + s.status + '">' + s.status + '</span></td><td style="display:flex;gap:4px;align-items:center"><select onchange="SSS.updateStatus(\'suggestions\',\'' + s.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','reviewed','in_progress','implemented','declined'].map(st => '<option' + (s.status===st?' selected':'') + '>' + st + '</option>').join('') + '</select><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'suggestions\',\'' + s.id + '\')">Delete</button></td></tr>').join('') || '<tr><td colspan="99" class="dyn-empty">No suggestions.</td></tr>';
+          if (tbody) tbody.innerHTML = (data||[]).map(s => '<tr class="expand-row" onclick="this.classList.toggle(\'open\')"><td><span class="expand-chevron" aria-hidden="true">&#9660;</span>' + fmtDate(s.submitted_at) + '</td><td>' + esc(s.name||'Anonymous') + '</td><td>' + esc(s.category) + '</td><td><span class="truncate-cell" style="display:block">' + esc(s.suggestion).substring(0,80) + (s.suggestion.length>80?'...':'') + '</span></td><td><span class="status-badge status-badge--' + s.status + '">' + s.status + '</span></td><td style="display:flex;gap:4px;align-items:center" onclick="event.stopPropagation()"><select onchange="SSS.updateStatus(\'suggestions\',\'' + s.id + '\',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">' + ['new','reviewed','in_progress','implemented','declined'].map(st => '<option' + (s.status===st?' selected':'') + '>' + st + '</option>').join('') + '</select><button class="admin-btn admin-btn--danger" onclick="SSS.adminDelete(\'suggestions\',\'' + s.id + '\')">Delete</button></td></tr><tr class="expand-detail"><td colspan="6"><div class="expand-detail__inner"><div class="expand-detail__label">Full Suggestion</div><div class="expand-detail__text">' + esc(s.suggestion) + '</div><div class="expand-detail__meta">' + (s.name ? '<span><strong>From:</strong> ' + esc(s.name) + '</span>' : '<span><strong>From:</strong> Anonymous</span>') + '<span><strong>Category:</strong> ' + esc(s.category) + '</span><span><strong>Wants Response:</strong> ' + (s.wants_response ? 'Yes' : 'No') + '</span>' + (s.email ? '<span><strong>Email:</strong> ' + esc(s.email) + '</span>' : '') + '</div></div></td></tr>').join('') || '<tr><td colspan="6" class="dyn-empty">No suggestions.</td></tr>';
         } else if (tab === 'settings') {
           const { data, error } = await SSS.supabase.from('site_settings').select('*').order('category');
           if (error) throw error;
