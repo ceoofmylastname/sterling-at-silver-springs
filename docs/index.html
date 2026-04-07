@@ -673,6 +673,18 @@
     .contact-card__row:last-child { border-bottom: none; }
     .contact-card__label { color: var(--text-muted); }
     .contact-card__value { font-weight: 500; color: var(--text); }
+    .board-member { cursor: pointer; transition: background var(--dur); }
+    .board-member:hover { background: var(--bg-alt); }
+    .board-member__header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .board-member__name { font-weight: 500; color: var(--text); }
+    .board-member__chevron { font-size: 10px; color: var(--text-muted); transition: transform var(--dur); }
+    .board-member.active .board-member__chevron { transform: rotate(180deg); }
+    .board-member__details { display: none; padding: 8px 20px 12px; background: var(--bg-alt); font-size: var(--text-sm); border-bottom: 1px solid var(--border-light); }
+    .board-member.active + .board-member__details { display: block; }
+    .board-member__details a { color: var(--primary); text-decoration: none; }
+    .board-member__details a:hover { text-decoration: underline; }
+    .board-member__detail-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; color: var(--text-light); }
+    .board-member__detail-row svg { flex-shrink: 0; stroke: var(--text-muted); }
     @media (max-width: 640px) { .contact-grid { grid-template-columns: 1fr; } }
 
     /* ============================================
@@ -1644,11 +1656,16 @@
       <div class="contact-card">
         <div class="contact-card__header">Board of Directors</div>
         <div class="contact-card__body" id="dyn-contact-board">
-          <div class="contact-card__row"><span class="contact-card__label">President</span><span class="contact-card__value">[Name]</span></div>
-          <div class="contact-card__row"><span class="contact-card__label">Vice President</span><span class="contact-card__value">[Name]</span></div>
-          <div class="contact-card__row"><span class="contact-card__label">Secretary</span><span class="contact-card__value">[Name]</span></div>
-          <div class="contact-card__row"><span class="contact-card__label">Treasurer</span><span class="contact-card__value">[Name]</span></div>
-          <div class="contact-card__row"><span class="contact-card__label">Member-at-Large</span><span class="contact-card__value">[Name]</span></div>
+          <div class="contact-card__row board-member" onclick="this.classList.toggle('active')"><span class="contact-card__label">President</span><span class="board-member__header"><span class="board-member__name">[Name]</span><span class="board-member__chevron" aria-hidden="true">&#9660;</span></span></div>
+          <div class="board-member__details"><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>[Email]</div><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg>[Phone]</div></div>
+          <div class="contact-card__row board-member" onclick="this.classList.toggle('active')"><span class="contact-card__label">Vice President</span><span class="board-member__header"><span class="board-member__name">[Name]</span><span class="board-member__chevron" aria-hidden="true">&#9660;</span></span></div>
+          <div class="board-member__details"><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>[Email]</div><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg>[Phone]</div></div>
+          <div class="contact-card__row board-member" onclick="this.classList.toggle('active')"><span class="contact-card__label">Secretary</span><span class="board-member__header"><span class="board-member__name">[Name]</span><span class="board-member__chevron" aria-hidden="true">&#9660;</span></span></div>
+          <div class="board-member__details"><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>[Email]</div><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg>[Phone]</div></div>
+          <div class="contact-card__row board-member" onclick="this.classList.toggle('active')"><span class="contact-card__label">Treasurer</span><span class="board-member__header"><span class="board-member__name">[Name]</span><span class="board-member__chevron" aria-hidden="true">&#9660;</span></span></div>
+          <div class="board-member__details"><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>[Email]</div><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg>[Phone]</div></div>
+          <div class="contact-card__row board-member" onclick="this.classList.toggle('active')"><span class="contact-card__label">Member-at-Large</span><span class="board-member__header"><span class="board-member__name">[Name]</span><span class="board-member__chevron" aria-hidden="true">&#9660;</span></span></div>
+          <div class="board-member__details"><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>[Email]</div><div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg>[Phone]</div></div>
         </div>
       </div>
     </div>
@@ -2686,7 +2703,18 @@
       }).join('') + '</tbody></table></div>';
     },
     boardMembers(members) {
-      return members.map(m => '<div class="contact-card__row"><span class="contact-card__label">' + esc(m.role) + '</span><span class="contact-card__value">' + esc(m.name) + '</span></div>').join('');
+      return members.map(function(m, i) {
+        var details = '';
+        if (m.email) details += '<div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + esc(m.email) + '">' + esc(m.email) + '</a></div>';
+        if (m.phone) details += '<div class="board-member__detail-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.8.3 1.58.52 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.22 1.54.4 2.34.52A2 2 0 0 1 22 16.92z"/></svg><a href="tel:' + esc(m.phone) + '">' + esc(m.phone) + '</a></div>';
+        var hasDetails = m.email || m.phone;
+        return '<div class="contact-card__row board-member' + (hasDetails ? '' : ' no-expand') + '" onclick="this.classList.toggle(\'active\')">' +
+          '<span class="contact-card__label">' + esc(m.role) + '</span>' +
+          '<span class="board-member__header"><span class="board-member__name">' + esc(m.name) + '</span>' +
+          (hasDetails ? '<span class="board-member__chevron" aria-hidden="true">&#9660;</span>' : '') +
+          '</span></div>' +
+          (hasDetails ? '<div class="board-member__details">' + details + '</div>' : '');
+      }).join('');
     },
     emergencyTable(contacts) {
       if (!contacts.length) return '<div class="dyn-empty">No emergency contacts.</div>';
