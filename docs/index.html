@@ -3240,8 +3240,8 @@
         description: nl.description,
         keywords: nl.keywords,
         ai_content: aiContent,
-        hero_image_url: nl.heroImageUrl || null,
-        extra_image_urls: nl.extraImageUrls || nl.accentImageUrl ? [nl.accentImageUrl] : [],
+        hero_image_url: null,
+        extra_image_urls: [],
         is_published: true,
         published_at: new Date().toISOString()
       }]);
