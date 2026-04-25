@@ -28,43 +28,52 @@ serve(async (req) => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250514",
+        model: "claude-haiku-4-5",
         max_tokens: 4000,
         messages: [{
           role: "user",
-          content: `You are a professional community newsletter writer for Sterling at Silver Springs HOA, a residential community in Arizona.
+          content: `You are an expert community newsletter writer for Sterling at Silver Springs HOA, a premium residential community in Arizona. Your goal is to take the rough input details provided and creatively enhance them into a polished, deeply engaging, and beautifully written newsletter.
 
-Write a complete, engaging community newsletter with the following details:
+Do not just repeat the input information. Expand on it thoughtfully, making it sound very human, highly professional, warm, and crystal clear. The content should be compelling and feel like it was written by a caring, top-tier community manager.
 
+Input Details:
 Title: ${title}
 Topic: ${topic}
 Target Audience: ${audience}
 Description/Context: ${description}
-Keywords to include: ${keywords}
+Keywords: ${keywords}
 
-Return a JSON object with this exact structure:
+Requirements:
+- Make sure EVERY piece of input context is utilized and expanded upon.
+- Write natural, beautifully flowing paragraphs that captivate the reader.
+- Tone: Premium, welcoming, clear, and highly engaging.
+
+Return a JSON object with this exact structure (NO OTHER TEXT):
 {
-  "headline": "compelling newsletter headline",
-  "tagline": "one-line subheading",
+  "headline": "A highly compelling, magazine-style newsletter headline",
+  "tagline": "An engaging one-line subheading that hooks the reader",
   "sections": [
     {
-      "heading": "section title",
-      "body": "section paragraph content (2-4 sentences, warm and informative community tone)"
+      "heading": "Clear, appealing section title",
+      "body": "Beautifully written, fully fleshed-out paragraph (3-5 sentences) that expands on the input details and flows naturally."
     }
   ],
   "callToAction": {
-    "text": "action button text",
-    "instruction": "what residents should do"
+    "text": "Strong, exciting action button text",
+    "instruction": "Clear, encouraging instructions on what to do next"
   },
-  "closingMessage": "warm closing paragraph from the Board of Directors"
-}
-
-Write in a warm, professional, community-focused tone. Assume this goes to all homeowners at Sterling at Silver Springs. Make it feel premium and welcoming. Return only the JSON object, no other text.`
+  "closingMessage": "A very warm, professional sign-off from the Board of Directors"
+}`
         }]
       })
     });
 
     const claudeData = await claudeRes.json();
+    
+    if (!claudeRes.ok || claudeData.type === "error") {
+      throw new Error(`Anthropic Error: ${claudeData.error?.message || JSON.stringify(claudeData)}`);
+    }
+
     const rawContent = claudeData.content[0].text;
     
     let newsletter;
