@@ -1338,7 +1338,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius-xl); overflow: hidden; margin-top: var(--space-md);
     }
-    .nl-iframe-wrap iframe { display: block; width: 100%; min-height: 1100px; border: 0; background: #fff; }
+    .nl-iframe-wrap iframe { display: block; width: 100%; min-height: 600px; border: 0; background: #fff; }
 
     /* Bulletin v2 — repeatable rows widget */
     .nl-rep { margin-bottom: var(--space-md); }
@@ -1369,13 +1369,17 @@
       margin-top: 8px; padding: 6px 12px; font-size: var(--text-xs);
       border: 1px dashed var(--border); border-radius: var(--radius-sm);
       background: transparent; color: var(--text-light); cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .nl-rep__add:hover { color: var(--primary); border-color: var(--primary); }
+    .nl-rep__add:hover { background: var(--primary); color: #fff; border-color: var(--primary); border-style: solid; }
 
-    /* Bulletin v3 — sub-block (Board Meeting structured fields, Management contact card) */
+    /* Bulletin v3.1 — sub-block (Board Meeting structured fields, Management, Financials split) */
     .nl-subblock {
-      margin-bottom: var(--space-md); padding: var(--space-sm) 0;
-      border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+      margin-bottom: var(--space-md); padding: 16px;
+      background: #fafafa;
+      border-left: 3px solid var(--primary);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .nl-subblock__title {
       display: block; font-size: var(--text-sm); font-weight: 600;
@@ -2517,11 +2521,21 @@
           <button type="button" class="nl-rep__add" onclick="SSS.nlAddRoleRow()">+ Add role</button>
         </div>
 
-        <div class="nl-rep">
-          <span class="nl-rep__label">Monthly HOA Financials (optional)</span>
-          <div class="nl-rep__hint">Account name and amount. Numbers only for the amount. "Total" rows render bold.</div>
-          <table class="nl-rep__table"><thead><tr><th>Account Name</th><th style="width:30%">Amount</th><th></th></tr></thead><tbody id="nl-financials-body"></tbody></table>
-          <button type="button" class="nl-rep__add" onclick="SSS.nlAddFinancialRow()">+ Add financial</button>
+        <div class="nl-subblock">
+          <span class="nl-subblock__title">Monthly HOA Financials (optional)</span>
+          <div class="nl-subblock__hint">Two parallel accounts. Each side gets an auto-summed total in the bulletin. Amounts accept "$10,000.00" or "10000" — formatting normalizes on blur. Section appears if either side has rows.</div>
+
+          <div class="nl-rep" style="margin-top:8px">
+            <span class="nl-rep__label">Operating Account</span>
+            <table class="nl-rep__table"><thead><tr><th>Account Name</th><th style="width:35%">Amount</th><th></th></tr></thead><tbody id="nl-financials-operating-body"></tbody></table>
+            <button type="button" class="nl-rep__add" onclick="SSS.nlAddFinancialOperatingRow()">+ Add operating account</button>
+          </div>
+
+          <div class="nl-rep">
+            <span class="nl-rep__label">Reserve Account</span>
+            <table class="nl-rep__table"><thead><tr><th>Reserve Account</th><th style="width:35%">Amount</th><th></th></tr></thead><tbody id="nl-financials-reserve-body"></tbody></table>
+            <button type="button" class="nl-rep__add" onclick="SSS.nlAddFinancialReserveRow()">+ Add reserve account</button>
+          </div>
         </div>
 
         <button class="btn btn--primary" style="width:100%;margin-top:var(--space-md)" id="nlGenerateBtn" onclick="SSS.generateNewsletter()">Generate Newsletter</button>
@@ -2655,8 +2669,11 @@
   SSS.nlAddReminderRow = () => nlAddRow('nl-reminders-body', [
     { placeholder: 'Label' }, { placeholder: 'Short blurb' },
   ]);
-  SSS.nlAddFinancialRow = () => nlAddRow('nl-financials-body', [
-    { placeholder: 'Account name' }, { type: 'number', step: '0.01', placeholder: '0.00', parse: 'number' },
+  SSS.nlAddFinancialOperatingRow = () => nlAddRow('nl-financials-operating-body', [
+    { placeholder: 'Account name' }, { placeholder: '$0.00', parse: 'currency' },
+  ]);
+  SSS.nlAddFinancialReserveRow = () => nlAddRow('nl-financials-reserve-body', [
+    { placeholder: 'Reserve account' }, { placeholder: '$0.00', parse: 'currency' },
   ]);
 
   // === UTILITIES ===
@@ -2686,6 +2703,7 @@
       if (col.placeholder) inp.placeholder = col.placeholder;
       inp.className = 'nl-row-input';
       inp.dataset.parse = col.parse || 'string';
+      if (col.parse === 'currency') attachCurrencyInput(inp);
       td.appendChild(inp);
       tr.appendChild(td);
     });
@@ -2703,12 +2721,26 @@
       return Array.from(tr.querySelectorAll('.nl-row-input')).map(i => {
         const v = i.value.trim();
         if (i.dataset.parse === 'number') return v === '' ? 0 : parseFloat(v);
+        if (i.dataset.parse === 'currency') return parseCurrency(v);
         return v;
       });
     }).filter(row => row.some(v => v !== '' && v !== 0));
   }
+  // v3.1 currency helpers — used for the Financials Amount inputs.
+  function parseCurrency(str) {
+    const n = parseFloat(String(str ?? '').replace(/[$,\s]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  }
+  function formatCurrency(num) {
+    return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function attachCurrencyInput(input) {
+    input.addEventListener('blur', () => {
+      const n = parseCurrency(input.value);
+      input.value = n ? formatCurrency(n) : '';
+    });
+  }
   // Per-section row adders, exposed to onclick handlers in the form.
-  // Defined below on SSS once SSS is initialized; placeholders here to avoid TDZ in Edge cases:
 
   // === TOAST ===
   function toast(msg, type) {
@@ -3434,7 +3466,11 @@
       website: mgmtWebsite,
     } : null;
     const roles = nlReadRows('nl-roles-body');
-    const financials = nlReadRows('nl-financials-body');
+    // v3.1 financials — split into operating and reserve. nlReadRows returns
+    // [name, parsedAmount] pairs already (parse: 'currency' on the second column).
+    const financialsOperating = nlReadRows('nl-financials-operating-body');
+    const financialsReserve = nlReadRows('nl-financials-reserve-body');
+    const financials = { operating: financialsOperating, reserve: financialsReserve };
 
     const payload = {
       title,
@@ -3463,7 +3499,8 @@
       join_the_board.trim() !== '' ||
       management !== null ||
       roles.length > 0 ||
-      financials.length > 0
+      financialsOperating.length > 0 ||
+      financialsReserve.length > 0
     );
     if (!hasAnyContent) {
       preview.innerHTML = '<div class="dyn-error" style="padding:var(--space-md);text-align:center;color:var(--text)">Add at least one section before generating.</div>';
@@ -3518,7 +3555,7 @@
         newsletter: result.newsletter || null,
       };
 
-      // v2: iframe-only preview. The bulletin self-brands, so no outer wrapper or hardcoded logo.
+      // v3.1: iframe-only preview, auto-sized to bulletin content. The bulletin self-brands.
       const safeId = 'nl-preview-iframe';
       preview.innerHTML =
         '<div class="nl-iframe-wrap"><iframe id="' + safeId + '" title="Newsletter preview" sandbox="allow-same-origin" srcdoc=""></iframe></div>' +
@@ -3526,10 +3563,13 @@
           '<button class="btn btn--primary" onclick="SSS.publishNewsletter()">Publish</button>' +
           '<button class="btn btn--outline" onclick="SSS.generateNewsletter()">Regenerate</button>' +
           '<button class="btn btn--outline" onclick="SSS.nlPrintPreview()">Print</button>' +
+          '<button class="btn btn--outline" onclick="SSS.nlDownloadPdfPreview()">Download PDF</button>' +
+          '<button class="btn btn--outline" onclick="SSS.nlDownloadHtmlPreview()">Download HTML</button>' +
           '<button class="btn btn--outline" onclick="SSS.nlCopyHtml()">Copy HTML</button>' +
         '</div>';
-      // Set srcdoc via property assignment to avoid HTML-escaping the bulletin string into the attribute.
-      $(safeId).srcdoc = result.html;
+      const previewIframe = $(safeId);
+      nlAutosizeIframe(previewIframe);
+      previewIframe.srcdoc = result.html;
       toast('Newsletter generated successfully!', 'success');
     } catch(e) {
       console.error('Newsletter generation error:', e);
@@ -3592,20 +3632,27 @@
     const modal = $('adminModal'); modal.style.maxWidth = '760px';
 
     if (shape.kind === 'html') {
-      // v2 — iframe-only, no outer wrapper, no hardcoded logo. Self-branded bulletin.
+      // v3.1 — iframe-only, auto-sized, with Print + Download PDF + Download HTML.
+      // Buttons are subtle on the public side (smaller, lower contrast) and full-prominence for admins.
       const iframeId = 'showNL-iframe-' + id;
+      const isAdmin = !!SSS.isAdmin;
+      const btnCls = isAdmin ? 'btn btn--outline btn--sm' : 'btn btn--ghost btn--sm';
+      const escId = esc(id);
       modal.innerHTML =
         '<div class="nl-iframe-wrap" style="margin-top:0"><iframe id="' + iframeId + '" title="Newsletter" sandbox="allow-same-origin" srcdoc=""></iframe></div>' +
-        '<div class="admin-modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">' +
-          '<button class="btn btn--outline btn--sm" onclick="SSS.nlPrintShown(\'' + iframeId + '\')">Print</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="SSS.nlCopyShownHtml(\'' + esc(id) + '\')">Copy HTML</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Close</button>' +
+        '<div class="admin-modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end' + (isAdmin ? '' : ';opacity:0.85') + '">' +
+          '<button class="' + btnCls + '" onclick="SSS.nlPrintShown(\'' + iframeId + '\')">Print</button>' +
+          '<button class="' + btnCls + '" onclick="SSS.nlDownloadPdfShown(\'' + escId + '\')">Download PDF</button>' +
+          '<button class="' + btnCls + '" onclick="SSS.nlDownloadHtmlShown(\'' + escId + '\')">Download HTML</button>' +
+          (isAdmin ? '<button class="btn btn--outline btn--sm" onclick="SSS.nlCopyShownHtml(\'' + escId + '\')">Copy HTML</button>' : '') +
+          '<button class="' + btnCls + '" onclick="SSS.closeModal()">Close</button>' +
         '</div>';
-      // Property assignment so the bulletin string isn't HTML-escaped into the attribute.
-      $(iframeId).srcdoc = shape.html;
-      // Stash for Copy HTML — keyed by row id so multiple modals can't collide.
+      const showIframe = $(iframeId);
+      nlAutosizeIframe(showIframe);
+      showIframe.srcdoc = shape.html;
+      // Stash for Copy HTML / Downloads — keyed by row id so multiple modals can't collide.
       SSS._shownNL = SSS._shownNL || {};
-      SSS._shownNL[id] = shape.html;
+      SSS._shownNL[id] = { html: shape.html, title: data.title, published_at: data.published_at };
     } else {
       // Legacy structured (or empty) — keep the existing wrapper render with the logo header.
       const ai = shape.kind === 'structured' ? shape.data : {};
@@ -3618,10 +3665,120 @@
     f.contentWindow.focus(); f.contentWindow.print();
   };
   SSS.nlCopyShownHtml = async function(id) {
-    const html = SSS._shownNL && SSS._shownNL[id];
+    const stash = SSS._shownNL && SSS._shownNL[id];
+    const html = stash && stash.html;
     if (!html) { toast('No HTML to copy.', 'error'); return; }
     try { await navigator.clipboard.writeText(html); toast('HTML copied to clipboard.', 'success'); }
     catch(e) { toast('Copy failed: ' + e.message, 'error'); }
+  };
+
+  // === v3.1: iframe auto-size + downloads ===
+  // Auto-grow an iframe to its rendered body height, with a 600px floor.
+  // Sandbox is "allow-same-origin" so contentDocument is reachable.
+  function nlAutosizeIframe(iframe) {
+    if (!iframe) return;
+    iframe.onload = () => {
+      try {
+        const doc = iframe.contentDocument;
+        if (!doc || !doc.body) return;
+        const h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+        if (h > 0) iframe.style.height = h + 'px';
+      } catch (e) { /* ignore — fallback to min-height */ }
+    };
+  }
+
+  // Build a print-ready, locale-aware filename slug. e.g. "sterling-newsletter-may-2026"
+  function nlBuildFilename(stash) {
+    const dt = (stash && stash.published_at) ? new Date(stash.published_at) : new Date();
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', month: 'long', year: 'numeric' });
+    const slug = fmt.format(dt).toLowerCase().replace(/\s+/g, '-');
+    return 'sterling-newsletter-' + slug;
+  }
+
+  // Lazy-load html2pdf.js from cloudflare CDN once. Resolves with the global html2pdf,
+  // rejects if the network or CDN fails — caller toasts a graceful error in that case.
+  let _html2pdfLoader = null;
+  function loadHtml2Pdf() {
+    if (window.html2pdf) return Promise.resolve(window.html2pdf);
+    if (_html2pdfLoader) return _html2pdfLoader;
+    _html2pdfLoader = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      s.async = true;
+      s.onload = () => window.html2pdf ? resolve(window.html2pdf) : reject(new Error('html2pdf not exposed by CDN bundle'));
+      s.onerror = () => { _html2pdfLoader = null; reject(new Error('Failed to load html2pdf.js from CDN')); };
+      document.head.appendChild(s);
+    });
+    return _html2pdfLoader;
+  }
+
+  // Trigger PDF download for a given bulletin HTML string.
+  // Renders into a detached DOM node (the iframe is sandboxed, html2pdf can't reach inside).
+  async function nlDownloadPdfFromHtml(html, filename) {
+    let html2pdf;
+    try { html2pdf = await loadHtml2Pdf(); }
+    catch (e) { toast('PDF library failed to load. Try Download HTML instead.', 'error'); return; }
+    // Build a hidden offscreen wrapper so html2pdf can rasterize at full width without affecting layout.
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;left:-99999px;top:0;width:8.5in;background:#fff;';
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper);
+    try {
+      await html2pdf().from(wrapper).set({
+        margin: 0.4,
+        filename: filename + '.pdf',
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      }).save();
+      toast('PDF downloaded.', 'success');
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      toast('PDF generation failed: ' + (e.message || 'unknown error'), 'error');
+    } finally {
+      wrapper.remove();
+    }
+  }
+
+  // Trigger HTML file download for a given bulletin HTML string.
+  function nlDownloadHtmlFromString(html, filename) {
+    try {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename + '.html';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+      toast('HTML downloaded.', 'success');
+    } catch (e) {
+      console.error('HTML download error:', e);
+      toast('HTML download failed: ' + (e.message || 'unknown error'), 'error');
+    }
+  }
+
+  // Generation-preview download buttons (admin tab, before publish).
+  SSS.nlDownloadPdfPreview = function() {
+    const html = SSS._pendingNL?.html;
+    if (!html) { toast('No newsletter to download.', 'error'); return; }
+    nlDownloadPdfFromHtml(html, nlBuildFilename(null));
+  };
+  SSS.nlDownloadHtmlPreview = function() {
+    const html = SSS._pendingNL?.html;
+    if (!html) { toast('No newsletter to download.', 'error'); return; }
+    nlDownloadHtmlFromString(html, nlBuildFilename(null));
+  };
+
+  // showNL modal download buttons (admin and public viewers).
+  SSS.nlDownloadPdfShown = function(id) {
+    const stash = SSS._shownNL && SSS._shownNL[id];
+    if (!stash || !stash.html) { toast('No newsletter to download.', 'error'); return; }
+    nlDownloadPdfFromHtml(stash.html, nlBuildFilename(stash));
+  };
+  SSS.nlDownloadHtmlShown = function(id) {
+    const stash = SSS._shownNL && SSS._shownNL[id];
+    if (!stash || !stash.html) { toast('No newsletter to download.', 'error'); return; }
+    nlDownloadHtmlFromString(stash.html, nlBuildFilename(stash));
   };
 
   // === ADMIN USER MANAGEMENT ===
