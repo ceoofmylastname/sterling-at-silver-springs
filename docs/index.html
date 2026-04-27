@@ -1333,6 +1333,45 @@
       color: var(--primary); margin-bottom: var(--space-sm);
     }
 
+    /* Bulletin v2 — iframe preview wrapper */
+    .nl-iframe-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); overflow: hidden; margin-top: var(--space-md);
+    }
+    .nl-iframe-wrap iframe { display: block; width: 100%; min-height: 1100px; border: 0; background: #fff; }
+
+    /* Bulletin v2 — repeatable rows widget */
+    .nl-rep { margin-bottom: var(--space-md); }
+    .nl-rep__label {
+      display: block; font-size: var(--text-sm); font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .nl-rep__hint { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 8px; }
+    .nl-rep__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+    .nl-rep__table th {
+      text-align: left; padding: 6px 8px; font-weight: 600;
+      color: var(--text-light); border-bottom: 1px solid var(--border-light);
+    }
+    .nl-rep__table td { padding: 4px 4px; vertical-align: middle; }
+    .nl-rep__table input {
+      width: 100%; padding: 8px 10px; font-size: var(--text-sm);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg); color: var(--text);
+    }
+    .nl-rep__table input:focus { border-color: var(--primary); outline: none; }
+    .nl-rep__del {
+      width: 28px; height: 28px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); background: var(--bg);
+      color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1;
+    }
+    .nl-rep__del:hover { color: var(--alert); border-color: var(--alert); }
+    .nl-rep__add {
+      margin-top: 8px; padding: 6px 12px; font-size: var(--text-xs);
+      border: 1px dashed var(--border); border-radius: var(--radius-sm);
+      background: transparent; color: var(--text-light); cursor: pointer;
+    }
+    .nl-rep__add:hover { color: var(--primary); border-color: var(--primary); }
+
     /* Admin responsive */
     @media (max-width: 640px) {
       .admin-tabs {
@@ -2392,7 +2431,61 @@
           <input type="text" class="form-field__input" placeholder=" " id="nl-keywords">
           <label class="form-field__label" for="nl-keywords">Keywords (comma-separated)</label>
         </div>
-        <button class="btn btn--primary" style="width:100%" id="nlGenerateBtn" onclick="SSS.generateNewsletter()">Generate Newsletter</button>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-md)">
+          <div class="form-field">
+            <input type="text" class="form-field__input" placeholder=" " id="nl-issue-date">
+            <label class="form-field__label" for="nl-issue-date">Issue Date (e.g. May 2026)</label>
+          </div>
+          <div>
+            <label class="nl-rep__label" for="nl-brand-primary">Brand Primary Color</label>
+            <input type="color" id="nl-brand-primary" value="#1f3864" style="width:100%;height:44px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);padding:4px;cursor:pointer">
+          </div>
+          <div class="form-field">
+            <input type="text" class="form-field__input" placeholder=" " id="nl-logo-url">
+            <label class="form-field__label" for="nl-logo-url">Logo URL (optional)</label>
+          </div>
+        </div>
+
+        <div class="nl-rep">
+          <span class="nl-rep__label">Events</span>
+          <div class="nl-rep__hint">Add upcoming events. Date · Event Name · Time.</div>
+          <table class="nl-rep__table"><thead><tr><th>Date</th><th>Event</th><th>Time</th><th></th></tr></thead><tbody id="nl-events-body"></tbody></table>
+          <button type="button" class="nl-rep__add" onclick="SSS.nlAddEventRow()">+ Add event</button>
+        </div>
+
+        <div class="nl-rep">
+          <span class="nl-rep__label">Contacts</span>
+          <div class="nl-rep__hint">Role · Name · Email or Phone.</div>
+          <table class="nl-rep__table"><thead><tr><th>Role</th><th>Name</th><th>Email or Phone</th><th></th></tr></thead><tbody id="nl-contacts-body"></tbody></table>
+          <button type="button" class="nl-rep__add" onclick="SSS.nlAddContactRow()">+ Add contact</button>
+        </div>
+
+        <div class="nl-rep">
+          <span class="nl-rep__label">Reminders</span>
+          <div class="nl-rep__hint">Short label and 1–2 sentence blurb each.</div>
+          <table class="nl-rep__table"><thead><tr><th style="width:30%">Label</th><th>Blurb</th><th></th></tr></thead><tbody id="nl-reminders-body"></tbody></table>
+          <button type="button" class="nl-rep__add" onclick="SSS.nlAddReminderRow()">+ Add reminder</button>
+        </div>
+
+        <div class="nl-rep">
+          <span class="nl-rep__label">Financials (optional)</span>
+          <div class="nl-rep__hint">Account name and amount. Numbers only for the amount.</div>
+          <table class="nl-rep__table"><thead><tr><th>Account Name</th><th style="width:30%">Amount</th><th></th></tr></thead><tbody id="nl-financials-body"></tbody></table>
+          <button type="button" class="nl-rep__add" onclick="SSS.nlAddFinancialRow()">+ Add financial</button>
+        </div>
+
+        <div class="nl-rep" style="border-top:1px solid var(--border-light);padding-top:var(--space-md);margin-top:var(--space-sm)">
+          <span class="nl-rep__label">Call to Action (optional)</span>
+          <div class="nl-rep__hint">Single CTA box. Leave all blank to skip.</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px">
+            <input type="text" id="nl-cta-headline" placeholder="Headline" class="form-field__input" style="padding:8px 10px">
+            <input type="text" id="nl-cta-body" placeholder="Body" class="form-field__input" style="padding:8px 10px">
+            <input type="text" id="nl-cta-link" placeholder="Link or email" class="form-field__input" style="padding:8px 10px">
+          </div>
+        </div>
+
+        <button class="btn btn--primary" style="width:100%;margin-top:var(--space-md)" id="nlGenerateBtn" onclick="SSS.generateNewsletter()">Generate Newsletter</button>
       </div>
       <div id="nlPreview"></div>
       <h4 style="font-weight:600;margin-top:var(--space-xl);margin-bottom:var(--space-sm)">Published Newsletters</h4>
@@ -2513,12 +2606,70 @@
   // === GLOBAL STATE ===
   const SSS = { supabase: null, session: null, isAdmin: false, cache: {}, settings: {}, currentPage: 'home' };
   window.SSS = SSS;
+  // Newsletter repeatable-row adders (referenced by onclick="" in the AI Newsletter form).
+  SSS.nlAddEventRow = () => nlAddRow('nl-events-body', [
+    { placeholder: 'Sat May 2' }, { placeholder: 'Cinco de Mayo Brunch' }, { placeholder: '10:00-11:30 a.m.' },
+  ]);
+  SSS.nlAddContactRow = () => nlAddRow('nl-contacts-body', [
+    { placeholder: 'Role' }, { placeholder: 'Name' }, { placeholder: 'email@example.com or 702-555-0100' },
+  ]);
+  SSS.nlAddReminderRow = () => nlAddRow('nl-reminders-body', [
+    { placeholder: 'Label' }, { placeholder: 'Short blurb' },
+  ]);
+  SSS.nlAddFinancialRow = () => nlAddRow('nl-financials-body', [
+    { placeholder: 'Account name' }, { type: 'number', step: '0.01', placeholder: '0.00', parse: 'number' },
+  ]);
 
   // === UTILITIES ===
   function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
   function fmtDate(d) { if (!d) return ''; return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
   function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return `${hr > 12 ? hr-12 : hr||12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; }
   function $(id) { return document.getElementById(id); }
+
+  // === NEWSLETTER v2 — render shape + repeatable rows ===
+  // Decide which path to render an `ai_content` blob through.
+  // Priority: ai_content.html (v2)  →  ai_content.structured (v2)  →  legacy flat (v1)  →  none.
+  function getRenderShape(aiContent) {
+    const ai = aiContent || {};
+    if (typeof ai.html === 'string' && ai.html.trim()) return { kind: 'html', html: ai.html };
+    if (ai.structured && typeof ai.structured === 'object') return { kind: 'structured', data: ai.structured };
+    if (ai.headline || ai.sections || ai.callToAction || ai.tagline) return { kind: 'structured', data: ai };
+    return { kind: 'none', data: null };
+  }
+  function nlAddRow(tbodyId, columnDefs) {
+    const tbody = $(tbodyId); if (!tbody) return;
+    const tr = document.createElement('tr');
+    columnDefs.forEach(col => {
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = col.type || 'text';
+      if (col.step) inp.step = col.step;
+      if (col.placeholder) inp.placeholder = col.placeholder;
+      inp.className = 'nl-row-input';
+      inp.dataset.parse = col.parse || 'string';
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    const delTd = document.createElement('td'); delTd.style.width = '36px'; delTd.style.textAlign = 'right';
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button'; delBtn.className = 'nl-rep__del'; delBtn.textContent = '×';
+    delBtn.setAttribute('aria-label', 'Remove row');
+    delBtn.onclick = () => tr.remove();
+    delTd.appendChild(delBtn); tr.appendChild(delTd);
+    tbody.appendChild(tr);
+  }
+  function nlReadRows(tbodyId) {
+    const tbody = $(tbodyId); if (!tbody) return [];
+    return Array.from(tbody.querySelectorAll('tr')).map(tr => {
+      return Array.from(tr.querySelectorAll('.nl-row-input')).map(i => {
+        const v = i.value.trim();
+        if (i.dataset.parse === 'number') return v === '' ? 0 : parseFloat(v);
+        return v;
+      });
+    }).filter(row => row.some(v => v !== '' && v !== 0));
+  }
+  // Per-section row adders, exposed to onclick handlers in the form.
+  // Defined below on SSS once SSS is initialized; placeholders here to avoid TDZ in Edge cases:
 
   // === TOAST ===
   function toast(msg, type) {
@@ -2791,12 +2942,32 @@
     },
     nlLatest(nl) {
       if (!nl) return '<div class="dyn-empty">No newsletters published yet.</div>';
-      const ai = nl.ai_content || {};
-      return '<div class="card card--featured card--3d" style="margin-top:var(--space-md)">' + (nl.hero_image_url ? '<img src="' + esc(nl.hero_image_url) + '" alt="" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius-md);margin-bottom:var(--space-md)">' : '') + '<span class="badge badge--new" style="margin-bottom:10px">LATEST</span><h3 style="font-family:var(--font-display);font-size:var(--text-lg);color:var(--primary);margin-bottom:6px">' + esc(ai.headline || nl.title) + '</h3>' + (ai.tagline ? '<p style="color:var(--accent);font-size:var(--text-sm);font-weight:600;margin-bottom:8px">' + esc(ai.tagline) + '</p>' : '') + '<p style="color:var(--text-light);font-size:var(--text-sm);margin-bottom:var(--space-md)">' + esc(ai.sections && ai.sections[0] ? ai.sections[0].content : nl.description || '') + '</p><button class="btn btn--primary btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read Full Newsletter</button></div>';
+      const shape = getRenderShape(nl.ai_content);
+      const heroImg = nl.hero_image_url ? '<img src="' + esc(nl.hero_image_url) + '" alt="" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius-md);margin-bottom:var(--space-md)">' : '';
+      const cardOpen = '<div class="card card--featured card--3d" style="margin-top:var(--space-md)">' + heroImg + '<span class="badge badge--new" style="margin-bottom:10px">LATEST</span>';
+      const cardEnd = '<button class="btn btn--primary btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read Full Newsletter</button></div>';
+      if (shape.kind === 'html') {
+        // v2 HTML — minimal preview card. The full bulletin renders in the showNL iframe modal.
+        return cardOpen +
+          '<h3 style="font-family:var(--font-display);font-size:var(--text-lg);color:var(--primary);margin-bottom:6px">' + esc(nl.title) + '</h3>' +
+          '<p style="color:var(--accent);font-size:var(--text-sm);font-weight:600;margin-bottom:8px">' + esc(fmtDate(nl.published_at)) + '</p>' +
+          (nl.description ? '<p style="color:var(--text-light);font-size:var(--text-sm);margin-bottom:var(--space-md)">' + esc(nl.description) + '</p>' : '') +
+          cardEnd;
+      }
+      const ai = shape.kind === 'structured' ? shape.data : {};
+      return cardOpen +
+        '<h3 style="font-family:var(--font-display);font-size:var(--text-lg);color:var(--primary);margin-bottom:6px">' + esc(ai.headline || nl.title) + '</h3>' +
+        (ai.tagline ? '<p style="color:var(--accent);font-size:var(--text-sm);font-weight:600;margin-bottom:8px">' + esc(ai.tagline) + '</p>' : '') +
+        '<p style="color:var(--text-light);font-size:var(--text-sm);margin-bottom:var(--space-md)">' + esc(ai.sections && ai.sections[0] ? (ai.sections[0].body || ai.sections[0].content) : (nl.description || '')) + '</p>' +
+        cardEnd;
     },
     nlArchive(items) {
       if (items.length <= 1) return '<div class="dyn-empty">No archived newsletters.</div>';
-      return items.slice(1).map(nl => { const ai = nl.ai_content || {}; return '<div class="card" style="margin-bottom:var(--space-sm);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><strong style="color:var(--primary)">' + esc(ai.headline || nl.title) + '</strong><span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:10px">' + fmtDate(nl.published_at) + '</span></div><button class="btn btn--ghost btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read</button></div>'; }).join('');
+      return items.slice(1).map(nl => {
+        const shape = getRenderShape(nl.ai_content);
+        const title = (shape.kind === 'structured' && shape.data.headline) ? shape.data.headline : nl.title;
+        return '<div class="card" style="margin-bottom:var(--space-sm);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><strong style="color:var(--primary)">' + esc(title) + '</strong><span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:10px">' + fmtDate(nl.published_at) + '</span></div><button class="btn btn--ghost btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read</button></div>';
+      }).join('');
     }
   };
 
@@ -3120,8 +3291,10 @@
       const { data, error } = await SSS.supabase.from('newsletters').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       tbody.innerHTML = (data||[]).map(nl => {
-        const ai = nl.ai_content || {};
-        return '<tr><td><strong>' + esc(ai.headline || nl.title) + '</strong></td><td>' + fmtDate(nl.published_at || nl.created_at) + '</td><td>' + esc(nl.audience || '—') + '</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.showNL(\'' + nl.id + '\')">View</button><button class="admin-btn" onclick="SSS.adminToggle(\'newsletters\',\'' + nl.id + '\',' + !nl.is_published + ')">' + (nl.is_published ? 'Unpublish' : 'Publish') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.deleteNewsletter(\'' + nl.id + '\')">Delete</button></td></tr>';
+        const shape = getRenderShape(nl.ai_content);
+        const title = (shape.kind === 'structured' && shape.data.headline) ? shape.data.headline : nl.title;
+        const tag = shape.kind === 'html' ? '<span class="badge" style="background:var(--accent);color:#fff;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:4px">v2</span>' : '';
+        return '<tr><td><strong>' + esc(title) + '</strong>' + tag + '</td><td>' + fmtDate(nl.published_at || nl.created_at) + '</td><td>' + esc(nl.audience || '—') + '</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.showNL(\'' + nl.id + '\')">View</button><button class="admin-btn" onclick="SSS.adminToggle(\'newsletters\',\'' + nl.id + '\',' + !nl.is_published + ')">' + (nl.is_published ? 'Unpublish' : 'Publish') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.deleteNewsletter(\'' + nl.id + '\')">Delete</button></td></tr>';
       }).join('') || '<tr><td colspan="99" class="dyn-empty">No newsletters published yet.</td></tr>';
     } catch(e) {
       tbody.innerHTML = '<tr><td colspan="99" class="dyn-error">Failed to load newsletters.</td></tr>';
@@ -3182,6 +3355,25 @@
       return;
     }
 
+    // v2 structured intake
+    const issue_date = $('nl-issue-date')?.value.trim() || '';
+    const brand_primary = $('nl-brand-primary')?.value || '#1f3864';
+    const logo_url = $('nl-logo-url')?.value.trim() || null;
+    const events = nlReadRows('nl-events-body');
+    const contacts = nlReadRows('nl-contacts-body');
+    const reminders = nlReadRows('nl-reminders-body');
+    const financials = nlReadRows('nl-financials-body');
+    const ctaH = $('nl-cta-headline')?.value.trim() || '';
+    const ctaB = $('nl-cta-body')?.value.trim() || '';
+    const ctaL = $('nl-cta-link')?.value.trim() || '';
+    const cta = (ctaH || ctaB || ctaL) ? { headline: ctaH, body: ctaB, link: ctaL } : null;
+
+    const payload = {
+      title, topic, audience, description: desc, keywords: kw,
+      issue_date, brand_primary, logo_url,
+      events, contacts, reminders, financials, cta,
+    };
+
     const btn = $('nlGenerateBtn'), preview = $('nlPreview');
     btn.disabled = true; btn.textContent = 'Generating... (30-60s)';
     preview.innerHTML = '<div class="dyn-loading"><div style="text-align:center;padding:var(--space-xl)"><div style="width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;margin:0 auto var(--space-md);animation:spin 1s linear infinite"></div><p style="color:var(--text-muted)">AI is writing your newsletter...</p><p style="font-size:var(--text-xs);color:var(--text-muted);margin-top:8px">This takes 30-60 seconds</p></div></div>';
@@ -3196,7 +3388,7 @@
           'Authorization': 'Bearer ' + SB_KEY,
           'apikey': SB_KEY
         },
-        body: JSON.stringify({ title, topic, audience, description: desc, keywords: kw })
+        body: JSON.stringify(payload)
       });
       console.log('Response status:', res.status, res.statusText);
 
@@ -3213,35 +3405,63 @@
 
       const result = await res.json();
       console.log('Newsletter generated:', result);
-      console.log('Hero Image URL:', result.heroImageUrl);
-      console.log('Accent Image URL:', result.accentImageUrl);
 
       if (result.error) {
         throw new Error(result.error);
       }
-
-      SSS._pendingNL = { title, topic, audience, description: desc, keywords: kw, ...result };
-      const ai = result.newsletter || result.content || result;
-
-      console.log('AI Content:', ai);
-
-      if (!ai || !ai.headline) {
-        console.error('Invalid response structure:', result);
-        throw new Error('Invalid newsletter data received. Check API keys in Supabase dashboard.');
+      if (typeof result.html !== 'string' || !result.html.trim()) {
+        console.error('Missing html in response:', result);
+        throw new Error('Edge function returned no HTML. Check Supabase function logs.');
       }
 
-      preview.innerHTML = '<div class="newsletter-preview"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:var(--space-lg);text-align:center"><img src="https://assets.cdn.filesafe.space/nF7RwerbB5hn27XaM9D2/media/69cc96d9dbd0b5de7b8f0cb4.png" alt="Sterling at Silver Springs" style="max-width:200px;height:auto;filter:brightness(0) invert(1)"></div>' + (result.heroImageUrl ? '<img class="newsletter-preview__hero" src="' + esc(result.heroImageUrl) + '" alt="">' : '') + '<div class="newsletter-preview__body"><div class="newsletter-preview__headline">' + esc(ai.headline || title) + '</div>' + (ai.tagline ? '<div class="newsletter-preview__tagline">' + esc(ai.tagline) + '</div>' : '') + (ai.sections || []).map(s => '<div class="newsletter-section"><h4>' + esc(s.heading || s.title) + '</h4><p style="color:var(--text-light);font-size:var(--text-sm);line-height:1.7">' + esc(s.body || s.content) + '</p></div>').join('') + (ai.callToAction ? '<div style="text-align:center;padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(61,90,128,0.1));border-radius:var(--radius-lg);margin-top:var(--space-md)"><strong style="color:var(--primary);font-size:var(--text-md);display:block;margin-bottom:8px">' + esc(ai.callToAction.text || ai.callToAction) + '</strong>' + (ai.callToAction.instruction ? '<p style="color:var(--text-muted);font-size:var(--text-sm)">' + esc(ai.callToAction.instruction) + '</p>' : '') + '</div>' : '') + (ai.closingMessage ? '<p style="color:var(--text-light);font-style:italic;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-light)">' + esc(ai.closingMessage) + '</p>' : '') + '<div style="text-align:center;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:2px solid var(--border);color:var(--text-muted);font-size:var(--text-xs)"><p>Sterling at Silver Springs HOA • Newsletter</p></div></div></div><div style="display:flex;gap:10px;margin-top:var(--space-md);flex-wrap:wrap"><button class="btn btn--primary" onclick="SSS.publishNewsletter()">Publish</button><button class="btn btn--outline" onclick="SSS.generateNewsletter()">Regenerate</button></div>';
+      // Stash everything for publish: bulletin HTML, legacy structured shape, and the form intake.
+      SSS._pendingNL = {
+        title, topic, audience, description: desc, keywords: kw,
+        html: result.html,
+        newsletter: result.newsletter || null,
+      };
+
+      // v2: iframe-only preview. The bulletin self-brands, so no outer wrapper or hardcoded logo.
+      const safeId = 'nl-preview-iframe';
+      preview.innerHTML =
+        '<div class="nl-iframe-wrap"><iframe id="' + safeId + '" title="Newsletter preview" sandbox="allow-same-origin" srcdoc=""></iframe></div>' +
+        '<div style="display:flex;gap:10px;margin-top:var(--space-md);flex-wrap:wrap">' +
+          '<button class="btn btn--primary" onclick="SSS.publishNewsletter()">Publish</button>' +
+          '<button class="btn btn--outline" onclick="SSS.generateNewsletter()">Regenerate</button>' +
+          '<button class="btn btn--outline" onclick="SSS.nlPrintPreview()">Print</button>' +
+          '<button class="btn btn--outline" onclick="SSS.nlCopyHtml()">Copy HTML</button>' +
+        '</div>';
+      // Set srcdoc via property assignment to avoid HTML-escaping the bulletin string into the attribute.
+      $(safeId).srcdoc = result.html;
       toast('Newsletter generated successfully!', 'success');
     } catch(e) {
       console.error('Newsletter generation error:', e);
-      preview.innerHTML = '<div class="dyn-error" style="padding:var(--space-lg);text-align:center"><h4 style="color:var(--error);margin-bottom:var(--space-sm)">⚠️ Generation Failed</h4><p style="color:var(--text);margin-bottom:var(--space-md)">' + esc(e.message) + '</p><details style="text-align:left;background:var(--bg-alt);padding:var(--space-sm);border-radius:var(--radius-md);font-size:var(--text-xs);margin-top:var(--space-md)"><summary style="cursor:pointer;font-weight:600;margin-bottom:8px">Troubleshooting</summary><ul style="margin:0;padding-left:20px;line-height:1.8"><li>Check that ANTHROPIC_API_KEY is set in <a href="https://vffcbovlwaqdbyezydjm.supabase.co/project/vffcbovlwaqdbyezydjm/settings/functions" target="_blank" style="color:var(--primary)">Supabase Edge Function Secrets</a></li><li>Check that KIE_API_KEY is set in Edge Function Secrets</li><li>View Edge Function logs in <a href="https://supabase.com/dashboard/project/vffcbovlwaqdbyezydjm/functions/generate-newsletter/logs" target="_blank" style="color:var(--primary)">Supabase Dashboard</a></li><li>Open browser console (F12) for detailed error logs</li></ul></details></div>';
+      preview.innerHTML = '<div class="dyn-error" style="padding:var(--space-lg);text-align:center"><h4 style="color:var(--error);margin-bottom:var(--space-sm)">⚠️ Generation Failed</h4><p style="color:var(--text);margin-bottom:var(--space-md)">' + esc(e.message) + '</p><details style="text-align:left;background:var(--bg-alt);padding:var(--space-sm);border-radius:var(--radius-md);font-size:var(--text-xs);margin-top:var(--space-md)"><summary style="cursor:pointer;font-weight:600;margin-bottom:8px">Troubleshooting</summary><ul style="margin:0;padding-left:20px;line-height:1.8"><li>Check that ANTHROPIC_API_KEY is set in <a href="https://vffcbovlwaqdbyezydjm.supabase.co/project/vffcbovlwaqdbyezydjm/settings/functions" target="_blank" style="color:var(--primary)">Supabase Edge Function Secrets</a></li><li>View Edge Function logs in <a href="https://supabase.com/dashboard/project/vffcbovlwaqdbyezydjm/functions/generate-newsletter/logs" target="_blank" style="color:var(--primary)">Supabase Dashboard</a></li><li>Open browser console (F12) for detailed error logs</li></ul></details></div>';
     }
     finally { btn.disabled = false; btn.textContent = 'Generate Newsletter'; }
+  };
+  SSS.nlPrintPreview = function() {
+    const f = $('nl-preview-iframe'); if (!f || !f.contentWindow) { toast('Preview not ready.', 'error'); return; }
+    f.contentWindow.focus(); f.contentWindow.print();
+  };
+  SSS.nlCopyHtml = async function() {
+    const html = SSS._pendingNL?.html;
+    if (!html) { toast('No HTML to copy.', 'error'); return; }
+    try { await navigator.clipboard.writeText(html); toast('HTML copied to clipboard.', 'success'); }
+    catch(e) { toast('Copy failed: ' + e.message, 'error'); }
   };
   SSS.publishNewsletter = async function() {
     const nl = SSS._pendingNL; if (!nl) { toast('No newsletter to publish.', 'error'); return; }
     try {
-      const aiContent = nl.newsletter || nl.content || nl;
+      // v2 guard: never persist a row without HTML — that's the bug we fixed by switching to v2.
+      if (typeof nl.html !== 'string' || !nl.html.trim()) {
+        throw new Error('Cannot publish: bulletin HTML is missing. Regenerate before publishing.');
+      }
+      const aiContent = {
+        html: nl.html,
+        structured: nl.newsletter || null,
+        version: 'v2',
+      };
       const { error } = await SSS.supabase.from('newsletters').insert([{
         title: nl.title,
         topic: nl.topic,
@@ -3269,12 +3489,42 @@
     if (!SSS.supabase) return;
     const { data } = await SSS.supabase.from('newsletters').select('*').eq('id', id).single();
     if (!data) return;
-    const ai = data.ai_content || {};
+    const shape = getRenderShape(data.ai_content);
     let ov = $('adminModalOverlay');
-    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal" style="max-width:700px"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
-    const modal = $('adminModal'); modal.style.maxWidth = '700px';
-    modal.innerHTML = '<div class="newsletter-preview" style="border:none"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:var(--space-lg);text-align:center"><img src="https://assets.cdn.filesafe.space/nF7RwerbB5hn27XaM9D2/media/69cc96d9dbd0b5de7b8f0cb4.png" alt="Sterling at Silver Springs" style="max-width:200px;height:auto;filter:brightness(0) invert(1)"></div>' + (data.hero_image_url ? '<img class="newsletter-preview__hero" src="' + esc(data.hero_image_url) + '" alt="">' : '') + '<div class="newsletter-preview__body"><div class="newsletter-preview__headline">' + esc(ai.headline || data.title) + '</div>' + (ai.tagline ? '<div class="newsletter-preview__tagline">' + esc(ai.tagline) + '</div>' : '') + (ai.sections || []).map(s => '<div class="newsletter-section"><h4>' + esc(s.heading || s.title) + '</h4><p style="color:var(--text-light);font-size:var(--text-sm);line-height:1.7">' + esc(s.body || s.content) + '</p></div>').join('') + (ai.callToAction ? '<div style="text-align:center;padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(61,90,128,0.1));border-radius:var(--radius-lg);margin-top:var(--space-md)"><strong style="color:var(--primary);font-size:var(--text-md);display:block;margin-bottom:8px">' + esc(ai.callToAction.text || ai.callToAction) + '</strong>' + (ai.callToAction.instruction ? '<p style="color:var(--text-muted);font-size:var(--text-sm)">' + esc(ai.callToAction.instruction) + '</p>' : '') + '</div>' : '') + (ai.closingMessage ? '<p style="color:var(--text-light);font-style:italic;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-light)">' + esc(ai.closingMessage) + '</p>' : '') + '<div style="text-align:center;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:2px solid var(--border);color:var(--text-muted);font-size:var(--text-xs)"><p>Sterling at Silver Springs HOA • Newsletter</p></div></div></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Close</button></div>';
+    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal" style="max-width:760px"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
+    const modal = $('adminModal'); modal.style.maxWidth = '760px';
+
+    if (shape.kind === 'html') {
+      // v2 — iframe-only, no outer wrapper, no hardcoded logo. Self-branded bulletin.
+      const iframeId = 'showNL-iframe-' + id;
+      modal.innerHTML =
+        '<div class="nl-iframe-wrap" style="margin-top:0"><iframe id="' + iframeId + '" title="Newsletter" sandbox="allow-same-origin" srcdoc=""></iframe></div>' +
+        '<div class="admin-modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">' +
+          '<button class="btn btn--outline btn--sm" onclick="SSS.nlPrintShown(\'' + iframeId + '\')">Print</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="SSS.nlCopyShownHtml(\'' + esc(id) + '\')">Copy HTML</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Close</button>' +
+        '</div>';
+      // Property assignment so the bulletin string isn't HTML-escaped into the attribute.
+      $(iframeId).srcdoc = shape.html;
+      // Stash for Copy HTML — keyed by row id so multiple modals can't collide.
+      SSS._shownNL = SSS._shownNL || {};
+      SSS._shownNL[id] = shape.html;
+    } else {
+      // Legacy structured (or empty) — keep the existing wrapper render with the logo header.
+      const ai = shape.kind === 'structured' ? shape.data : {};
+      modal.innerHTML = '<div class="newsletter-preview" style="border:none"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:var(--space-lg);text-align:center"><img src="https://assets.cdn.filesafe.space/nF7RwerbB5hn27XaM9D2/media/69cc96d9dbd0b5de7b8f0cb4.png" alt="Sterling at Silver Springs" style="max-width:200px;height:auto;filter:brightness(0) invert(1)"></div>' + (data.hero_image_url ? '<img class="newsletter-preview__hero" src="' + esc(data.hero_image_url) + '" alt="">' : '') + '<div class="newsletter-preview__body"><div class="newsletter-preview__headline">' + esc(ai.headline || data.title) + '</div>' + (ai.tagline ? '<div class="newsletter-preview__tagline">' + esc(ai.tagline) + '</div>' : '') + (ai.sections || []).map(s => '<div class="newsletter-section"><h4>' + esc(s.heading || s.title) + '</h4><p style="color:var(--text-light);font-size:var(--text-sm);line-height:1.7">' + esc(s.body || s.content) + '</p></div>').join('') + (ai.callToAction ? '<div style="text-align:center;padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(61,90,128,0.1));border-radius:var(--radius-lg);margin-top:var(--space-md)"><strong style="color:var(--primary);font-size:var(--text-md);display:block;margin-bottom:8px">' + esc(ai.callToAction.text || ai.callToAction) + '</strong>' + (ai.callToAction.instruction ? '<p style="color:var(--text-muted);font-size:var(--text-sm)">' + esc(ai.callToAction.instruction) + '</p>' : '') + '</div>' : '') + (ai.closingMessage ? '<p style="color:var(--text-light);font-style:italic;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-light)">' + esc(ai.closingMessage) + '</p>' : '') + '<div style="text-align:center;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:2px solid var(--border);color:var(--text-muted);font-size:var(--text-xs)"><p>Sterling at Silver Springs HOA • Newsletter</p></div></div></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Close</button></div>';
+    }
     ov.classList.add('active');
+  };
+  SSS.nlPrintShown = function(iframeId) {
+    const f = $(iframeId); if (!f || !f.contentWindow) { toast('Preview not ready.', 'error'); return; }
+    f.contentWindow.focus(); f.contentWindow.print();
+  };
+  SSS.nlCopyShownHtml = async function(id) {
+    const html = SSS._shownNL && SSS._shownNL[id];
+    if (!html) { toast('No HTML to copy.', 'error'); return; }
+    try { await navigator.clipboard.writeText(html); toast('HTML copied to clipboard.', 'success'); }
+    catch(e) { toast('Copy failed: ' + e.message, 'error'); }
   };
 
   // === ADMIN USER MANAGEMENT ===
