@@ -3451,10 +3451,29 @@
     };
 
     const btn = $('nlGenerateBtn'), preview = $('nlPreview');
+
+    // Empty-form gate: Newsletter Title alone is not enough — at least one section
+    // must have content (per anchor checks for board_meeting and management).
+    const hasAnyContent = (
+      community_updates.trim() !== '' ||
+      board_meeting !== null ||
+      events.length > 0 ||
+      reminders.length > 0 ||
+      help_wanted.trim() !== '' ||
+      join_the_board.trim() !== '' ||
+      management !== null ||
+      roles.length > 0 ||
+      financials.length > 0
+    );
+    if (!hasAnyContent) {
+      preview.innerHTML = '<div class="dyn-error" style="padding:var(--space-md);text-align:center;color:var(--text)">Add at least one section before generating.</div>';
+      return;
+    }
+
     btn.disabled = true; btn.textContent = 'Generating... (30-60s)';
     preview.innerHTML = '<div class="dyn-loading"><div style="text-align:center;padding:var(--space-xl)"><div style="width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;margin:0 auto var(--space-md);animation:spin 1s linear infinite"></div><p style="color:var(--text-muted)">AI is writing your newsletter...</p><p style="font-size:var(--text-xs);color:var(--text-muted);margin-top:8px">This takes 30-60 seconds</p></div></div>';
     try {
-      console.log('Newsletter generation started...', { title, topic, audience });
+      console.log('Newsletter generation started...', { title });
       console.log('Using session token:', SSS.session.access_token ? 'Token exists (length: ' + SSS.session.access_token.length + ')' : 'NO TOKEN');
 
       const res = await fetch(EDGE_URL + '/generate-newsletter', {
