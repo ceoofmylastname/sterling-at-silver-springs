@@ -1,4 +1,13 @@
 // Sterling at Silver Springs — Edge Function: Newsletter AI Generator (v2)
+//
+// ⚠️ DEPRECATED — no longer called by the frontend.
+// The Newsletter feature was rewritten to a direct PDF upload flow
+// (see docs/index.html: SSS.uploadNewsletter and the newsletter-pdfs storage bucket).
+// This file is left deployed for historical reasons and is preserved in git
+// so the bulletin generation logic is recoverable if needed.
+// Safe to delete via `supabase functions delete generate-newsletter` once the
+// PDF upload flow has been live and verified for one full issue cycle.
+//
 // Deploy: supabase functions deploy generate-newsletter
 // Deno runtime
 //

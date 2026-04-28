@@ -1333,6 +1333,84 @@
       color: var(--primary); margin-bottom: var(--space-sm);
     }
 
+    /* Newsletter PDF upload — admin file input */
+    .nl-file-field { margin-bottom: var(--space-md); }
+    .nl-file-field__label {
+      display: block; font-size: var(--text-sm); font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .nl-file-field__input {
+      width: 100%; padding: 10px 12px; font-size: var(--text-sm);
+      border: 1px dashed var(--border); border-radius: var(--radius-md);
+      background: var(--bg-alt); color: var(--text); cursor: pointer;
+      font-family: inherit; transition: border-color 0.15s ease;
+    }
+    .nl-file-field__input:hover { border-color: var(--primary); }
+    .nl-file-field__input::file-selector-button {
+      margin-right: 12px; padding: 6px 14px; border: 1px solid var(--primary);
+      background: var(--primary); color: #fff; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: var(--text-xs); font-family: inherit;
+    }
+    .nl-file-field__input::file-selector-button:hover { opacity: 0.9; }
+    .nl-file-field__hint { margin-top: 6px; font-size: var(--text-xs); color: var(--text-muted); }
+    .nl-upload-status {
+      margin-top: var(--space-sm); padding: 0 4px;
+      font-size: var(--text-sm); color: var(--text-light); min-height: 1.4em;
+    }
+    .nl-upload-status--error { color: var(--alert); }
+    .nl-upload-status--success { color: var(--primary); }
+
+    /* Newsletter PDF — public renderer (stacked PDF.js canvases) */
+    .nl-pdf-public {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); overflow: hidden; margin-top: var(--space-md);
+    }
+    .nl-pdf-public__header {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-alt);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm);
+    }
+    .nl-pdf-public__title {
+      font-family: var(--font-display); font-size: var(--text-lg);
+      color: var(--primary); margin: 0;
+    }
+    .nl-pdf-public__date { font-size: var(--text-sm); color: var(--text-muted); margin-top: 2px; }
+    .nl-pdf-public__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nl-pdf-canvas-wrap {
+      padding: var(--space-md) 0;
+      background: #f0f0f0;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .nl-pdf-page {
+      display: block; margin: 0 auto var(--space-sm); max-width: 850px; width: 100%;
+      height: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.12); background: #fff;
+    }
+    .nl-pdf-loading { padding: var(--space-xl); text-align: center; color: var(--text-muted); }
+
+    /* Newsletter PDF — public archive list */
+    .nl-archive-list { list-style: none; padding: 0; margin: var(--space-md) 0 0; }
+    .nl-archive-item {
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      margin-bottom: 8px; overflow: hidden; background: var(--surface);
+    }
+    .nl-archive-header {
+      padding: 12px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      transition: background-color 0.15s ease;
+    }
+    .nl-archive-header:hover { background: var(--bg-alt); }
+    .nl-archive-date {
+      font-weight: 600; color: var(--primary);
+      min-width: 130px; font-size: var(--text-sm);
+    }
+    .nl-archive-title { flex: 1; color: var(--text); font-size: var(--text-sm); }
+    .nl-archive-toggle { color: var(--text-muted); font-size: var(--text-xs); transition: transform 0.2s ease; }
+    .nl-archive-item--open .nl-archive-toggle { transform: rotate(180deg); }
+    .nl-archive-body { display: none; padding: var(--space-sm) var(--space-md) var(--space-md); border-top: 1px solid var(--border-light); }
+    .nl-archive-item--open .nl-archive-body { display: block; }
+    .nl-archive-body__actions { display: flex; gap: 8px; flex-wrap: wrap; padding: var(--space-sm) 0; }
+
     /* Admin responsive */
     @media (max-width: 640px) {
       .admin-tabs {
@@ -2229,7 +2307,7 @@
       <button class="admin-tab" data-tab="quicklinks">Quick Links</button>
       <button class="admin-tab" data-tab="requests">Requests</button>
       <button class="admin-tab" data-tab="suggestions-admin">Suggestions</button>
-      <button class="admin-tab" data-tab="newsletter">Newsletter AI</button>
+      <button class="admin-tab" data-tab="newsletter">Newsletter</button>
       <button class="admin-tab" data-tab="settings">Settings</button>
       <button class="admin-tab" data-tab="adminusers">Admin Users</button>
     </div>
@@ -2363,40 +2441,31 @@
       <div class="table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Name</th><th>Category</th><th>Suggestion</th><th>Status</th><th>Update</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <!-- Newsletter AI Panel -->
+    <!-- Newsletter Upload Panel -->
     <div class="admin-panel" id="admin-newsletter">
       <div class="admin-toolbar">
-        <h4 style="font-weight:600">AI Newsletter Generator</h4>
+        <h4 style="font-weight:600">Upload Newsletter</h4>
       </div>
       <div class="form-card" style="margin-bottom:var(--space-lg)">
+        <p style="font-size:var(--text-sm);color:var(--text-light);margin-bottom:var(--space-md)">Upload a finished PDF newsletter. It appears on the public Newsletters page immediately after publishing.</p>
         <div class="form-field">
           <input type="text" class="form-field__input" placeholder=" " id="nl-title">
           <label class="form-field__label" for="nl-title">Newsletter Title <span class="form-field__req">*</span></label>
         </div>
         <div class="form-field">
-          <input type="text" class="form-field__input" placeholder=" " id="nl-topic">
-          <label class="form-field__label" for="nl-topic">Topic <span class="form-field__req">*</span></label>
+          <input type="text" class="form-field__input" placeholder=" " id="nl-issue-date">
+          <label class="form-field__label" for="nl-issue-date">Issue Date — Month YYYY (e.g. May 2026) <span class="form-field__req">*</span></label>
         </div>
-        <div class="form-field">
-          <select class="form-field__input" id="nl-audience" required>
-            <option value="" disabled selected></option>
-            <option>All Residents</option><option>New Residents</option><option>Board Members</option><option>Homeowners</option>
-          </select>
-          <label class="form-field__label" for="nl-audience">Target Audience</label>
+        <div class="nl-file-field">
+          <label class="nl-file-field__label" for="nl-pdf-file">PDF File <span class="form-field__req">*</span></label>
+          <input type="file" class="nl-file-field__input" id="nl-pdf-file" accept="application/pdf">
+          <div class="nl-file-field__hint">PDF only · Maximum 25 MB</div>
         </div>
-        <div class="form-field">
-          <textarea class="form-field__input" placeholder=" " id="nl-description"></textarea>
-          <label class="form-field__label" for="nl-description">Description / Key Points</label>
-        </div>
-        <div class="form-field">
-          <input type="text" class="form-field__input" placeholder=" " id="nl-keywords">
-          <label class="form-field__label" for="nl-keywords">Keywords (comma-separated)</label>
-        </div>
-        <button class="btn btn--primary" style="width:100%" id="nlGenerateBtn" onclick="SSS.generateNewsletter()">Generate Newsletter</button>
+        <button class="btn btn--primary" style="width:100%;margin-top:var(--space-md)" id="nlUploadBtn" onclick="SSS.uploadNewsletter()">Upload and Publish</button>
+        <div id="nl-upload-status" class="nl-upload-status"></div>
       </div>
-      <div id="nlPreview"></div>
       <h4 style="font-weight:600;margin-top:var(--space-xl);margin-bottom:var(--space-sm)">Published Newsletters</h4>
-      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Date</th><th>Audience</th><th>Actions</th></tr></thead><tbody id="nl-published-tbody"></tbody></table></div>
+      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Issue Date</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="nl-published-tbody"></tbody></table></div>
     </div>
 
     <!-- Settings Panel -->
@@ -2682,7 +2751,7 @@
     async getAllMeetings() { return this.get('board_meetings', { eq: { is_published: true }, order: ['meeting_date', false] }); },
     async getBoardMembers() { return this.get('board_members', { eq: { is_active: true }, order: ['sort_order'] }); },
     async getEmergencyContacts() { return this.get('emergency_contacts', { eq: { is_active: true }, order: ['sort_order'] }); },
-    async getNewsletters() { return this.get('newsletters', { eq: { is_published: true }, order: ['published_at', false] }); },
+    async getNewsletters() { return this.get('newsletters', { eq: { is_published: true, type: 'pdf' }, order: ['published_at', false] }); },
     async getFaqs() { return this.get('faqs', { eq: { is_active: true }, order: ['sort_order'] }); },
     async getChecklist() { return this.get('new_resident_checklist', { eq: { is_active: true }, order: ['sort_order'] }); },
     async getNRContacts() { return this.get('new_resident_contacts', { eq: { is_active: true }, order: ['sort_order'] }); },
@@ -2789,14 +2858,53 @@
         return '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);padding:var(--space-md)"><div style="display:flex;align-items:center;gap:var(--space-sm)"><span style="font-size:24px">' + icon + '</span><div><strong style="color:var(--primary)">' + esc(d.name) + '</strong>' + (d.description ? '<br><span style="font-size:var(--text-xs);color:var(--text-muted)">' + esc(d.description) + '</span>' : '') + '</div></div><div style="display:flex;gap:6px;flex-shrink:0"><a href="' + esc(d.file_url) + '" target="_blank" rel="noopener" class="btn btn--outline btn--sm">View</a><a href="' + esc(d.file_url) + '" download class="btn btn--ghost btn--sm">Download</a></div></div>';
       }).join('') + '</div>';
     },
+    // PDF latest — renders the most-recent published PDF inline as stacked canvas pages.
+    // The container's pdf_url data-attribute is what triggers the lazy PDF.js render after innerHTML lands.
     nlLatest(nl) {
       if (!nl) return '<div class="dyn-empty">No newsletters published yet.</div>';
-      const ai = nl.ai_content || {};
-      return '<div class="card card--featured card--3d" style="margin-top:var(--space-md)">' + (nl.hero_image_url ? '<img src="' + esc(nl.hero_image_url) + '" alt="" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius-md);margin-bottom:var(--space-md)">' : '') + '<span class="badge badge--new" style="margin-bottom:10px">LATEST</span><h3 style="font-family:var(--font-display);font-size:var(--text-lg);color:var(--primary);margin-bottom:6px">' + esc(ai.headline || nl.title) + '</h3>' + (ai.tagline ? '<p style="color:var(--accent);font-size:var(--text-sm);font-weight:600;margin-bottom:8px">' + esc(ai.tagline) + '</p>' : '') + '<p style="color:var(--text-light);font-size:var(--text-sm);margin-bottom:var(--space-md)">' + esc(ai.sections && ai.sections[0] ? ai.sections[0].content : nl.description || '') + '</p><button class="btn btn--primary btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read Full Newsletter</button></div>';
+      const url = nl.pdf_url || '';
+      const issue = nl.issue_date || fmtDate(nl.published_at);
+      return '<div class="nl-pdf-public">' +
+        '<div class="nl-pdf-public__header">' +
+          '<div>' +
+            '<h3 class="nl-pdf-public__title">' + esc(nl.title) + '</h3>' +
+            '<div class="nl-pdf-public__date">' + esc(issue) + '</div>' +
+          '</div>' +
+          '<div class="nl-pdf-public__actions">' +
+            '<a class="btn btn--outline btn--sm" href="' + esc(url) + '" download>Download PDF</a>' +
+            '<a class="btn btn--outline btn--sm" href="' + esc(url) + '" target="_blank" rel="noopener">Open in new tab</a>' +
+            '<button class="btn btn--outline btn--sm" onclick="SSS.printPdfUrl(\'' + esc(url) + '\')">Print</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="nl-pdf-canvas-wrap" data-nl-pdf-url="' + esc(url) + '">' +
+          '<div class="nl-pdf-loading">Loading PDF…</div>' +
+        '</div>' +
+      '</div>';
     },
+    // PDF archive — collapsible list. Each item lazy-renders its PDF on first expand.
     nlArchive(items) {
       if (items.length <= 1) return '<div class="dyn-empty">No archived newsletters.</div>';
-      return items.slice(1).map(nl => { const ai = nl.ai_content || {}; return '<div class="card" style="margin-bottom:var(--space-sm);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><strong style="color:var(--primary)">' + esc(ai.headline || nl.title) + '</strong><span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:10px">' + fmtDate(nl.published_at) + '</span></div><button class="btn btn--ghost btn--sm" onclick="SSS.showNL(\'' + nl.id + '\')">Read</button></div>'; }).join('');
+      return '<ul class="nl-archive-list">' + items.slice(1).map(nl => {
+        const url = nl.pdf_url || '';
+        const issue = nl.issue_date || fmtDate(nl.published_at);
+        return '<li class="nl-archive-item" id="nl-archive-' + esc(nl.id) + '">' +
+          '<div class="nl-archive-header" onclick="SSS.toggleArchiveItem(\'' + esc(nl.id) + '\')">' +
+            '<span class="nl-archive-date">' + esc(issue) + '</span>' +
+            '<span class="nl-archive-title">' + esc(nl.title) + '</span>' +
+            '<span class="nl-archive-toggle">▼</span>' +
+          '</div>' +
+          '<div class="nl-archive-body">' +
+            '<div class="nl-archive-body__actions">' +
+              '<a class="btn btn--outline btn--sm" href="' + esc(url) + '" download>Download PDF</a>' +
+              '<a class="btn btn--outline btn--sm" href="' + esc(url) + '" target="_blank" rel="noopener">Open in new tab</a>' +
+              '<button class="btn btn--outline btn--sm" onclick="SSS.printPdfUrl(\'' + esc(url) + '\')">Print</button>' +
+            '</div>' +
+            '<div class="nl-pdf-canvas-wrap" data-nl-pdf-url="' + esc(url) + '" data-nl-lazy="1">' +
+              '<div class="nl-pdf-loading">Click to load PDF.</div>' +
+            '</div>' +
+          '</div>' +
+        '</li>';
+      }).join('') + '</ul>';
     }
   };
 
@@ -2876,6 +2984,9 @@
       const nls = await DS.getNewsletters();
       const le = $('dyn-latest-newsletter'); if (le) le.innerHTML = R.nlLatest(nls[0]);
       const ae = $('dyn-newsletter-archive'); if (ae) ae.innerHTML = R.nlArchive(nls);
+      // Eagerly render the latest PDF inline. Archive items render lazily on expand.
+      const latestWrap = le ? le.querySelector('.nl-pdf-canvas-wrap') : null;
+      if (latestWrap && latestWrap.dataset.nlPdfUrl) renderPdfInline(latestWrap, latestWrap.dataset.nlPdfUrl);
     } catch(e) { showError('dyn-latest-newsletter'); }
   }
   async function loadFaq() {
@@ -3112,24 +3223,43 @@
       toast('Delete failed: ' + e.message, 'error');
     }
   };
+  // PDF newsletter — admin Published table. Filters to type='pdf' so legacy AI-generated rows don't pollute the list.
   SSS.loadPublishedNewsletters = async function() {
     const tbody = $('nl-published-tbody');
     if (!tbody) return;
     showLoading(tbody);
     try {
-      const { data, error } = await SSS.supabase.from('newsletters').select('*').order('created_at', { ascending: false });
+      const { data, error } = await SSS.supabase
+        .from('newsletters').select('*')
+        .eq('type', 'pdf')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       tbody.innerHTML = (data||[]).map(nl => {
-        const ai = nl.ai_content || {};
-        return '<tr><td><strong>' + esc(ai.headline || nl.title) + '</strong></td><td>' + fmtDate(nl.published_at || nl.created_at) + '</td><td>' + esc(nl.audience || '—') + '</td><td class="admin-actions"><button class="admin-btn" onclick="SSS.showNL(\'' + nl.id + '\')">View</button><button class="admin-btn" onclick="SSS.adminToggle(\'newsletters\',\'' + nl.id + '\',' + !nl.is_published + ')">' + (nl.is_published ? 'Unpublish' : 'Publish') + '</button><button class="admin-btn admin-btn--danger" onclick="SSS.deleteNewsletter(\'' + nl.id + '\')">Delete</button></td></tr>';
-      }).join('') || '<tr><td colspan="99" class="dyn-empty">No newsletters published yet.</td></tr>';
+        const issue = nl.issue_date || '—';
+        return '<tr>' +
+          '<td><strong>' + esc(nl.title) + '</strong></td>' +
+          '<td>' + esc(issue) + '</td>' +
+          '<td>' + fmtDate(nl.published_at || nl.created_at) + '</td>' +
+          '<td class="admin-actions">' +
+            (nl.pdf_url ? '<a class="admin-btn" href="' + esc(nl.pdf_url) + '" target="_blank" rel="noopener">View</a>' : '') +
+            '<button class="admin-btn" onclick="SSS.adminToggle(\'newsletters\',\'' + nl.id + '\',' + !nl.is_published + ')">' + (nl.is_published ? 'Unpublish' : 'Publish') + '</button>' +
+            '<button class="admin-btn admin-btn--danger" onclick="SSS.deleteNewsletter(\'' + nl.id + '\',\'' + esc(nl.pdf_path || '') + '\')">Delete</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('') || '<tr><td colspan="99" class="dyn-empty">No newsletters uploaded yet.</td></tr>';
     } catch(e) {
       tbody.innerHTML = '<tr><td colspan="99" class="dyn-error">Failed to load newsletters.</td></tr>';
     }
   };
-  SSS.deleteNewsletter = async function(id) {
+  // Delete: remove the storage object first (best effort), then the DB row.
+  // path may be empty for old rows that pre-date pdf_path — DB row deletion still works.
+  SSS.deleteNewsletter = async function(id, path) {
     if (!confirm('Permanently delete this newsletter? This cannot be undone.')) return;
     try {
+      if (path) {
+        const { error: storageErr } = await SSS.supabase.storage.from('newsletter-pdfs').remove([path]);
+        if (storageErr) console.warn('Storage delete warning:', storageErr.message);
+      }
       const { error } = await SSS.supabase.from('newsletters').delete().eq('id', id);
       if (error) throw error;
       await SSS.logActivity('Deleted newsletter', 'newsletters', id, 'Permanently deleted newsletter');
@@ -3170,111 +3300,143 @@
     } catch(e) { toast('Save failed: ' + e.message, 'error'); }
   };
 
-  // === NEWSLETTER AI ===
-  SSS.generateNewsletter = async function() {
-    const title = $('nl-title')?.value, topic = $('nl-topic')?.value, audience = $('nl-audience')?.value, desc = $('nl-description')?.value, kw = $('nl-keywords')?.value;
-    if (!title || !topic) { toast('Title and topic required.', 'error'); return; }
+  // === NEWSLETTER PDF UPLOAD ===
+  // Replaces the AI-generated bulletin flow. Admin uploads a finished PDF; the public site
+  // shows the latest PDF inline as stacked PDF.js canvas pages, with archive entries
+  // collapsed and lazy-loaded. The supabase/functions/generate-newsletter/ edge function
+  // is left deployed but no longer called.
 
-    // Check authentication
+  // PDF.js — lazy-loaded ESM bundle from cdnjs on first render.
+  const PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+  const PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+  let _pdfjsPromise = null;
+  function loadPdfJs() {
+    if (_pdfjsPromise) return _pdfjsPromise;
+    _pdfjsPromise = import(PDFJS_SRC).then(lib => {
+      lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_SRC;
+      return lib;
+    }).catch(err => { _pdfjsPromise = null; throw err; });
+    return _pdfjsPromise;
+  }
+  // Render a PDF as stacked canvas pages inside the given DOM element.
+  // Tracks render state on the element so re-entry is idempotent.
+  async function renderPdfInline(containerEl, pdfUrl) {
+    if (!containerEl || !pdfUrl) return;
+    if (containerEl.dataset.nlRendered === '1') return;
+    containerEl.dataset.nlRendered = 'rendering';
+    containerEl.innerHTML = '<div class="nl-pdf-loading">Loading PDF…</div>';
+    try {
+      const lib = await loadPdfJs();
+      const pdf = await lib.getDocument(pdfUrl).promise;
+      containerEl.innerHTML = '';
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.className = 'nl-pdf-page';
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        containerEl.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      }
+      containerEl.dataset.nlRendered = '1';
+    } catch (err) {
+      console.error('PDF render error:', err);
+      containerEl.dataset.nlRendered = '';
+      containerEl.innerHTML = '<div class="nl-pdf-loading" style="color:var(--alert)">Failed to load PDF.</div>';
+    }
+  }
+  // Toggle a public-archive item open/closed, lazy-rendering on first open.
+  SSS.toggleArchiveItem = function(id) {
+    const item = $('nl-archive-' + id);
+    if (!item) return;
+    item.classList.toggle('nl-archive-item--open');
+    if (item.classList.contains('nl-archive-item--open')) {
+      const wrap = item.querySelector('.nl-pdf-canvas-wrap[data-nl-lazy="1"]');
+      if (wrap && wrap.dataset.nlPdfUrl) renderPdfInline(wrap, wrap.dataset.nlPdfUrl);
+    }
+  };
+  // Open the PDF in a new tab and trigger the browser's print dialog after load.
+  SSS.printPdfUrl = function(url) {
+    if (!url) return;
+    const w = window.open(url, '_blank');
+    if (!w) { toast('Browser blocked the print window. Allow pop-ups and try again.', 'error'); return; }
+    w.addEventListener('load', () => { try { w.focus(); w.print(); } catch (e) {} });
+  };
+
+  // Admin upload handler.
+  SSS.uploadNewsletter = async function() {
+    const titleEl = $('nl-title'), issueEl = $('nl-issue-date'), fileEl = $('nl-pdf-file'), btn = $('nlUploadBtn'), status = $('nl-upload-status');
+    const title = (titleEl?.value || '').trim();
+    const issueDate = (issueEl?.value || '').trim();
+    const file = fileEl?.files?.[0];
+
+    const setStatus = (msg, kind) => {
+      if (!status) return;
+      status.textContent = msg || '';
+      status.classList.toggle('nl-upload-status--error', kind === 'error');
+      status.classList.toggle('nl-upload-status--success', kind === 'success');
+    };
+
     if (!SSS.session || !SSS.session.access_token) {
-      toast('Authentication error. Please log out and log back in.', 'error');
-      console.error('No valid session found:', SSS.session);
+      setStatus('Authentication error. Please log out and log back in.', 'error');
+      return;
+    }
+    if (!title || !issueDate || !file) {
+      setStatus('Title, Issue Date, and PDF file are all required.', 'error');
+      return;
+    }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setStatus('Only PDF files are allowed.', 'error');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setStatus('PDF is too large. Maximum 25 MB.', 'error');
       return;
     }
 
-    const btn = $('nlGenerateBtn'), preview = $('nlPreview');
-    btn.disabled = true; btn.textContent = 'Generating... (30-60s)';
-    preview.innerHTML = '<div class="dyn-loading"><div style="text-align:center;padding:var(--space-xl)"><div style="width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;margin:0 auto var(--space-md);animation:spin 1s linear infinite"></div><p style="color:var(--text-muted)">AI is writing your newsletter...</p><p style="font-size:var(--text-xs);color:var(--text-muted);margin-top:8px">This takes 30-60 seconds</p></div></div>';
+    btn.disabled = true;
+    setStatus('Uploading…');
+    let uploadedPath = null;
     try {
-      console.log('Newsletter generation started...', { title, topic, audience });
-      console.log('Using session token:', SSS.session.access_token ? 'Token exists (length: ' + SSS.session.access_token.length + ')' : 'NO TOKEN');
+      const slug = (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) || 'newsletter';
+      const path = Date.now() + '-' + slug + '.pdf';
 
-      const res = await fetch(EDGE_URL + '/generate-newsletter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + SB_KEY,
-          'apikey': SB_KEY
-        },
-        body: JSON.stringify({ title, topic, audience, description: desc, keywords: kw })
-      });
-      console.log('Response status:', res.status, res.statusText);
+      const { error: uploadErr } = await SSS.supabase.storage
+        .from('newsletter-pdfs')
+        .upload(path, file, { contentType: 'application/pdf', upsert: false });
+      if (uploadErr) throw uploadErr;
+      uploadedPath = path;
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Edge Function error:', errorText);
-        try {
-          const errorJson = JSON.parse(errorText);
-          throw new Error(errorJson.error || errorText);
-        } catch {
-          throw new Error('Generation failed (HTTP ' + res.status + '): ' + errorText);
-        }
-      }
+      const { data: urlData } = SSS.supabase.storage.from('newsletter-pdfs').getPublicUrl(path);
+      const pdfUrl = urlData?.publicUrl;
+      if (!pdfUrl) throw new Error('Failed to get public URL.');
 
-      const result = await res.json();
-      console.log('Newsletter generated:', result);
-      console.log('Hero Image URL:', result.heroImageUrl);
-      console.log('Accent Image URL:', result.accentImageUrl);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      SSS._pendingNL = { title, topic, audience, description: desc, keywords: kw, ...result };
-      const ai = result.newsletter || result.content || result;
-
-      console.log('AI Content:', ai);
-
-      if (!ai || !ai.headline) {
-        console.error('Invalid response structure:', result);
-        throw new Error('Invalid newsletter data received. Check API keys in Supabase dashboard.');
-      }
-
-      preview.innerHTML = '<div class="newsletter-preview"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:var(--space-lg);text-align:center"><img src="https://assets.cdn.filesafe.space/nF7RwerbB5hn27XaM9D2/media/69cc96d9dbd0b5de7b8f0cb4.png" alt="Sterling at Silver Springs" style="max-width:200px;height:auto;filter:brightness(0) invert(1)"></div>' + (result.heroImageUrl ? '<img class="newsletter-preview__hero" src="' + esc(result.heroImageUrl) + '" alt="">' : '') + '<div class="newsletter-preview__body"><div class="newsletter-preview__headline">' + esc(ai.headline || title) + '</div>' + (ai.tagline ? '<div class="newsletter-preview__tagline">' + esc(ai.tagline) + '</div>' : '') + (ai.sections || []).map(s => '<div class="newsletter-section"><h4>' + esc(s.heading || s.title) + '</h4><p style="color:var(--text-light);font-size:var(--text-sm);line-height:1.7">' + esc(s.body || s.content) + '</p></div>').join('') + (ai.callToAction ? '<div style="text-align:center;padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(61,90,128,0.1));border-radius:var(--radius-lg);margin-top:var(--space-md)"><strong style="color:var(--primary);font-size:var(--text-md);display:block;margin-bottom:8px">' + esc(ai.callToAction.text || ai.callToAction) + '</strong>' + (ai.callToAction.instruction ? '<p style="color:var(--text-muted);font-size:var(--text-sm)">' + esc(ai.callToAction.instruction) + '</p>' : '') + '</div>' : '') + (ai.closingMessage ? '<p style="color:var(--text-light);font-style:italic;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-light)">' + esc(ai.closingMessage) + '</p>' : '') + '<div style="text-align:center;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:2px solid var(--border);color:var(--text-muted);font-size:var(--text-xs)"><p>Sterling at Silver Springs HOA • Newsletter</p></div></div></div><div style="display:flex;gap:10px;margin-top:var(--space-md);flex-wrap:wrap"><button class="btn btn--primary" onclick="SSS.publishNewsletter()">Publish</button><button class="btn btn--outline" onclick="SSS.generateNewsletter()">Regenerate</button></div>';
-      toast('Newsletter generated successfully!', 'success');
-    } catch(e) {
-      console.error('Newsletter generation error:', e);
-      preview.innerHTML = '<div class="dyn-error" style="padding:var(--space-lg);text-align:center"><h4 style="color:var(--error);margin-bottom:var(--space-sm)">⚠️ Generation Failed</h4><p style="color:var(--text);margin-bottom:var(--space-md)">' + esc(e.message) + '</p><details style="text-align:left;background:var(--bg-alt);padding:var(--space-sm);border-radius:var(--radius-md);font-size:var(--text-xs);margin-top:var(--space-md)"><summary style="cursor:pointer;font-weight:600;margin-bottom:8px">Troubleshooting</summary><ul style="margin:0;padding-left:20px;line-height:1.8"><li>Check that ANTHROPIC_API_KEY is set in <a href="https://vffcbovlwaqdbyezydjm.supabase.co/project/vffcbovlwaqdbyezydjm/settings/functions" target="_blank" style="color:var(--primary)">Supabase Edge Function Secrets</a></li><li>Check that KIE_API_KEY is set in Edge Function Secrets</li><li>View Edge Function logs in <a href="https://supabase.com/dashboard/project/vffcbovlwaqdbyezydjm/functions/generate-newsletter/logs" target="_blank" style="color:var(--primary)">Supabase Dashboard</a></li><li>Open browser console (F12) for detailed error logs</li></ul></details></div>';
-    }
-    finally { btn.disabled = false; btn.textContent = 'Generate Newsletter'; }
-  };
-  SSS.publishNewsletter = async function() {
-    const nl = SSS._pendingNL; if (!nl) { toast('No newsletter to publish.', 'error'); return; }
-    try {
-      const aiContent = nl.newsletter || nl.content || nl;
-      const { error } = await SSS.supabase.from('newsletters').insert([{
-        title: nl.title,
-        topic: nl.topic,
-        audience: nl.audience,
-        description: nl.description,
-        keywords: nl.keywords,
-        ai_content: aiContent,
-        hero_image_url: null,
-        extra_image_urls: [],
+      const { error: insertErr } = await SSS.supabase.from('newsletters').insert([{
+        title,
+        issue_date: issueDate,
+        pdf_url: pdfUrl,
+        pdf_path: path,
+        type: 'pdf',
         is_published: true,
-        published_at: new Date().toISOString()
+        published_at: new Date().toISOString(),
       }]);
-      if (error) throw error;
-      await SSS.logActivity('Published newsletter', 'newsletters', null, 'Published: ' + (nl.title || 'Untitled'));
-      toast('Newsletter published! Visible on Newsletters page.', 'success');
-      SSS._pendingNL = null;
-      $('nlPreview').innerHTML = '<div style="padding:var(--space-xl);text-align:center;background:var(--bg-alt);border-radius:var(--radius-lg)"><div style="font-size:48px;margin-bottom:var(--space-md)">✅</div><h4 style="color:var(--primary);margin-bottom:8px">Newsletter Published!</h4><p style="color:var(--text-muted)">Your newsletter is now live on the Newsletters page.</p></div>';
-      console.log('Newsletter published successfully');
-    } catch(e) {
-      console.error('Publish error:', e);
-      toast('Publish failed: ' + e.message, 'error');
+      if (insertErr) throw insertErr;
+
+      await SSS.logActivity('Uploaded newsletter', 'newsletters', null, 'Uploaded: ' + title + ' (' + issueDate + ')');
+      setStatus('Uploaded and published.', 'success');
+      titleEl.value = ''; issueEl.value = ''; fileEl.value = '';
+      SSS.loadPublishedNewsletters();
+    } catch (err) {
+      console.error('Upload error:', err);
+      // If we wrote the file but the DB insert failed, try to remove the orphan file (best effort).
+      if (uploadedPath) {
+        try { await SSS.supabase.storage.from('newsletter-pdfs').remove([uploadedPath]); } catch (_) {}
+      }
+      setStatus('Upload failed: ' + (err.message || 'unknown error'), 'error');
+    } finally {
+      btn.disabled = false;
     }
-  };
-  SSS.showNL = async function(id) {
-    if (!SSS.supabase) return;
-    const { data } = await SSS.supabase.from('newsletters').select('*').eq('id', id).single();
-    if (!data) return;
-    const ai = data.ai_content || {};
-    let ov = $('adminModalOverlay');
-    if (!ov) { ov = document.createElement('div'); ov.id = 'adminModalOverlay'; ov.className = 'admin-modal-overlay'; ov.innerHTML = '<div class="admin-modal" id="adminModal" style="max-width:700px"></div>'; ov.addEventListener('click', e => { if (e.target === ov) closeModal(); }); document.body.appendChild(ov); }
-    const modal = $('adminModal'); modal.style.maxWidth = '700px';
-    modal.innerHTML = '<div class="newsletter-preview" style="border:none"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:var(--space-lg);text-align:center"><img src="https://assets.cdn.filesafe.space/nF7RwerbB5hn27XaM9D2/media/69cc96d9dbd0b5de7b8f0cb4.png" alt="Sterling at Silver Springs" style="max-width:200px;height:auto;filter:brightness(0) invert(1)"></div>' + (data.hero_image_url ? '<img class="newsletter-preview__hero" src="' + esc(data.hero_image_url) + '" alt="">' : '') + '<div class="newsletter-preview__body"><div class="newsletter-preview__headline">' + esc(ai.headline || data.title) + '</div>' + (ai.tagline ? '<div class="newsletter-preview__tagline">' + esc(ai.tagline) + '</div>' : '') + (ai.sections || []).map(s => '<div class="newsletter-section"><h4>' + esc(s.heading || s.title) + '</h4><p style="color:var(--text-light);font-size:var(--text-sm);line-height:1.7">' + esc(s.body || s.content) + '</p></div>').join('') + (ai.callToAction ? '<div style="text-align:center;padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(61,90,128,0.1));border-radius:var(--radius-lg);margin-top:var(--space-md)"><strong style="color:var(--primary);font-size:var(--text-md);display:block;margin-bottom:8px">' + esc(ai.callToAction.text || ai.callToAction) + '</strong>' + (ai.callToAction.instruction ? '<p style="color:var(--text-muted);font-size:var(--text-sm)">' + esc(ai.callToAction.instruction) + '</p>' : '') + '</div>' : '') + (ai.closingMessage ? '<p style="color:var(--text-light);font-style:italic;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-light)">' + esc(ai.closingMessage) + '</p>' : '') + '<div style="text-align:center;margin-top:var(--space-lg);padding-top:var(--space-md);border-top:2px solid var(--border);color:var(--text-muted);font-size:var(--text-xs)"><p>Sterling at Silver Springs HOA • Newsletter</p></div></div></div><div class="admin-modal-actions"><button class="btn btn--outline btn--sm" onclick="SSS.closeModal()">Close</button></div>';
-    ov.classList.add('active');
   };
 
   // === ADMIN USER MANAGEMENT ===

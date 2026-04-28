@@ -429,3 +429,16 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON newsletters FOR EACH ROW EXECUTE 
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON faqs FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON resident_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON suggestions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- NEWSLETTER PDF UPLOAD (replaces AI-generated bulletin flow)
+-- See supabase/migrations/20260428192948_newsletter_pdf_upload.sql
+-- ============================================================
+ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS pdf_url TEXT;
+ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS pdf_path TEXT;
+ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS issue_date TEXT;
+ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'pdf';
+
+-- Storage bucket `newsletter-pdfs` is created via the Storage Admin API at deploy time
+-- (public read, 25MB limit, application/pdf only). Storage RLS policies live in the
+-- migration file above.
