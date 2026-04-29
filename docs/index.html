@@ -2884,13 +2884,9 @@
       if (!items.length) return '<div class="dyn-empty">No activities listed.</div>';
       return '<div class="table-wrap"><table class="table"><thead><tr><th>Activity</th><th>When</th><th>Where</th></tr></thead><tbody>' + items.map(a => '<tr><td><strong>' + esc(a.name) + '</strong></td><td>' + esc(a.schedule) + '</td><td>' + esc(a.location) + '</td></tr>').join('') + '</tbody></table></div>';
     },
-    calendarEvents(events, meetings) {
-      const all = [];
-      // Add events
-      events.forEach(e => all.push({ date: e.start_datetime, title: e.title, type: e.category, location: e.location, desc: e.description }));
-      // Add meetings
-      meetings.forEach(m => all.push({ date: m.meeting_date + 'T' + (m.meeting_time || '19:00'), title: 'Board Meeting', type: 'board', location: m.location, desc: m.notes }));
-      // Sort by date
+    // Public Activities Community Calendar — events ONLY. Board meetings live on the Meetings page.
+    calendarEvents(events) {
+      const all = events.map(e => ({ date: e.start_datetime, title: e.title, type: e.category, location: e.location, desc: e.description }));
       all.sort((a, b) => new Date(a.date) - new Date(b.date));
       if (!all.length) return '<div class="dyn-empty">No upcoming events.</div>';
       const catColors = { board: '#3D5A80', committee: '#5B7AA5', community: '#6B9080', maintenance: '#D4A843', deadline: '#E63946' };
@@ -2899,14 +2895,14 @@
         return '<tr><td><strong>' + fmtDate(e.date) + '</strong><br><span style="font-size:var(--text-xs);color:var(--text-muted)">' + fmtTime(e.date.split('T')[1] || '19:00') + '</span></td><td><strong>' + esc(e.title) + '</strong>' + (e.desc ? '<br><span style="font-size:var(--text-xs);color:var(--text-muted)">' + esc(e.desc).substring(0,60) + '</span>' : '') + '</td><td><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;text-transform:uppercase;background:' + catColors[cat] + '22;color:' + catColors[cat] + '">' + cat + '</span></td><td>' + esc(e.location || 'TBD') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     },
-    // Compact "What's Coming Up" preview for the home page. Same data sources as the
-    // Activities Community Calendar (events + board_meetings), capped to 5 entries
-    // and styled as a card list rather than a table.
-    homeCalendar(events, meetings) {
-      const all = [];
-      events.forEach(e => all.push({ date: e.start_datetime, title: e.title, type: e.category, location: e.location }));
-      meetings.forEach(m => all.push({ date: m.meeting_date + 'T' + (m.meeting_time || '19:00'), title: 'Board Meeting', type: 'board', location: m.location }));
-      const upcoming = all.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+    // Compact "What's Coming Up" preview for the home page — events ONLY (board meetings
+    // are surfaced separately by the next-meeting card and live on the Meetings page).
+    // Capped to 5 entries, styled as a card list.
+    homeCalendar(events) {
+      const upcoming = events
+        .map(e => ({ date: e.start_datetime, title: e.title, type: e.category, location: e.location }))
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 5);
       if (!upcoming.length) return '<div class="dyn-empty">No upcoming events on the calendar yet.</div>';
       const catColors = { board: '#3D5A80', committee: '#5B7AA5', community: '#6B9080', maintenance: '#D4A843', deadline: '#E63946' };
       return '<ul class="home-calendar">' + upcoming.map(e => {
@@ -3063,12 +3059,13 @@
       if (!feat) { const all = await DS.getAnnouncements(); feat = all[0]; }
       const el = $('dyn-latest-announcement'); if (el) el.innerHTML = R.featured(feat);
     } catch(e) { showError('dyn-latest-announcement'); }
-    // "What's Coming Up" — compact preview of the same Community Calendar shown on Activities.
+    // "What's Coming Up" — compact preview of community events. Board meetings are
+    // surfaced by the next-meeting card and live on the Meetings page; not here.
     const calEl = $('dyn-home-calendar');
     if (calEl) {
       try {
-        const [events, meetings] = await Promise.all([DS.getEvents(), DS.getUpcomingMeetings()]);
-        calEl.innerHTML = R.homeCalendar(events, meetings);
+        const events = await DS.getEvents();
+        calEl.innerHTML = R.homeCalendar(events);
       } catch(e) { showError('dyn-home-calendar'); }
     }
   }
@@ -3080,11 +3077,12 @@
       showLoading(activitiesEl);
       try { activitiesEl.innerHTML = R.activitiesTable(await DS.getActivities()); } catch(e) { showError(activitiesEl); }
     }
+    // Community Calendar — events ONLY. Board meetings live on the public Meetings page.
     if (eventsEl) {
       showLoading(eventsEl);
       try {
-        const [events, meetings] = await Promise.all([DS.getEvents(), DS.getUpcomingMeetings()]);
-        eventsEl.innerHTML = R.calendarEvents(events, meetings);
+        const events = await DS.getEvents();
+        eventsEl.innerHTML = R.calendarEvents(events);
       } catch(e) { showError(eventsEl); }
     }
   }
@@ -3912,7 +3910,9 @@
     SSS.supabase.channel('public-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, () => { SSS.cache.settings = null; loadGlobalData(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => { if (SSS.currentPage === 'home') loadHome(); if (SSS.currentPage === 'announcements') loadAnnouncements(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'board_meetings' }, () => { loadGlobalData(); if (SSS.currentPage === 'meetings') loadMeetings(); if (SSS.currentPage === 'home') loadHome(); if (SSS.currentPage === 'activities') loadActivities(); })
+      // board_meetings drives the home page next-meeting card (via loadGlobalData) and the public
+      // Meetings page. The Activities calendar and home "What's Coming Up" no longer use this table.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'board_meetings' }, () => { loadGlobalData(); if (SSS.currentPage === 'meetings') loadMeetings(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => { if (SSS.currentPage === 'home') loadHome(); if (SSS.currentPage === 'activities') loadActivities(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletters' }, () => { if (SSS.currentPage === 'newsletters') loadNewsletters(); })
       .subscribe();
