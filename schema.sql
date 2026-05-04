@@ -442,3 +442,25 @@ ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'pdf';
 -- Storage bucket `newsletter-pdfs` is created via the Storage Admin API at deploy time
 -- (public read, 25MB limit, application/pdf only). Storage RLS policies live in the
 -- migration file above.
+
+-- ============================================================
+-- REQUEST LINKS — replaces the public Submit-a-Request inline form with a curated
+-- list of external Google Forms cards. See supabase/migrations/20260504170449_request_links.sql
+-- ============================================================
+CREATE TABLE IF NOT EXISTS request_links (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT,
+  url TEXT NOT NULL,
+  category TEXT,
+  icon TEXT,
+  sort_order INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE request_links ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active request links" ON request_links FOR SELECT USING (is_active = true);
+CREATE POLICY "Admin full access request links" ON request_links FOR ALL USING (auth.role() = 'authenticated');
+ALTER PUBLICATION supabase_realtime ADD TABLE request_links;
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON request_links FOR EACH ROW EXECUTE FUNCTION update_updated_at();

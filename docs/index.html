@@ -847,6 +847,80 @@
     .subpage-card__desc { font-size: var(--text-sm); color: var(--text-light); line-height: 1.6; }
     @media (max-width: 640px) { .subpage-cards { grid-template-columns: 1fr; } }
 
+    /* Request Links — curated cards on the public Submit a Request page (Google Forms etc.) */
+    .req-section { margin-top: var(--space-lg); }
+    .req-section__title {
+      font-family: var(--font-display); font-size: var(--text-md); font-weight: 700;
+      color: var(--primary); margin: 0 0 var(--space-sm);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .req-section__title::before {
+      content: ''; width: 4px; height: 18px; border-radius: 2px;
+      background: var(--accent);
+    }
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    @media (max-width: 1000px) { .req-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .req-grid { grid-template-columns: 1fr; gap: var(--space-sm); } }
+    .req-card {
+      position: relative; display: flex; flex-direction: column;
+      padding: var(--space-lg); padding-right: 44px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none; color: var(--text);
+      box-shadow: var(--shadow-xs);
+      transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease-spring), border-color var(--dur);
+      overflow: hidden;
+      min-height: 120px;
+    }
+    .req-card::before {
+      content: ''; position: absolute; top: 0; left: 0; bottom: 0;
+      width: 4px; background: var(--accent);
+      transition: width var(--dur);
+    }
+    .req-card:hover {
+      transform: translateY(-3px); box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .req-card:hover::before { width: 6px; }
+    .req-card__icon {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); margin-bottom: 12px;
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.04), -3px -3px 8px rgba(255,255,255,0.5);
+    }
+    .req-card__icon svg { width: 18px; height: 18px; stroke: var(--primary); stroke-width: 1.8; fill: none; }
+    .req-card__title {
+      font-family: var(--font-display); font-weight: 700;
+      font-size: var(--text-md); color: var(--primary);
+      margin-bottom: 4px; line-height: 1.3;
+    }
+    .req-card__desc {
+      font-size: var(--text-sm); color: var(--text-light);
+      line-height: 1.5; flex: 1;
+    }
+    .req-card__arrow {
+      position: absolute; top: var(--space-lg); right: var(--space-md);
+      width: 22px; height: 22px;
+      color: var(--text-muted);
+      transition: transform var(--dur), color var(--dur);
+    }
+    .req-card:hover .req-card__arrow {
+      transform: translate(2px, -2px);
+      color: var(--accent);
+    }
+    .req-card__arrow svg { width: 100%; height: 100%; stroke: currentColor; stroke-width: 2; fill: none; }
+    .req-empty {
+      padding: var(--space-xl); text-align: center;
+      background: var(--bg-alt); border: 1px dashed var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-light);
+    }
+
     /* ============================================
        WINS / SUGGESTIONS
        ============================================ */
@@ -2146,7 +2220,7 @@
 <div class="page" id="page-request">
   <div class="page-header page-header--request">
     <h2>Submit a Request</h2>
-    <p>Use the form below to contact the right person about your question, concern, or request.</p>
+    <p>Pick the form that matches your request. We've grouped them by topic so you can find the right one quickly.</p>
   </div>
   <div class="section">
     <div class="card card--3d sr" style="margin-bottom:var(--space-lg);padding:var(--space-md)">
@@ -2155,87 +2229,14 @@
         <h3 style="font-family:var(--font-sans);font-size:var(--text-md);font-weight:600;color:var(--primary)">How It Works</h3>
       </div>
       <ol style="margin-left:20px;color:var(--text-light);font-size:var(--text-sm);line-height:2.2">
-        <li>Fill out the form below with your details and select a topic</li>
-        <li>Your request is automatically sent to the appropriate board member or committee</li>
-        <li>You'll receive a confirmation email with a reference number</li>
-        <li>Expect a response within the timeframe shown for your topic</li>
+        <li>Click the form that matches your request</li>
+        <li>Fill out the form on Google Forms — it opens in a new tab</li>
+        <li>Your submission is routed to the right board member or committee automatically</li>
+        <li>You'll get a confirmation when it's received</li>
       </ol>
     </div>
 
-    <div class="form-card sr">
-      <h3 style="font-family:var(--font-display);font-size:var(--text-lg);color:var(--primary);margin-bottom:var(--space-lg)">Submit a Request Form</h3>
-      <div class="form-field">
-        <input type="text" class="form-field__input" placeholder=" " id="f-name">
-        <label class="form-field__label" for="f-name">Resident Name <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <input type="email" class="form-field__input" placeholder=" " id="f-email">
-        <label class="form-field__label" for="f-email">Email Address <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <input type="tel" class="form-field__input" placeholder=" " id="f-phone">
-        <label class="form-field__label" for="f-phone">Phone Number</label>
-      </div>
-      <div class="form-field">
-        <input type="text" class="form-field__input" placeholder=" " id="f-addr">
-        <label class="form-field__label" for="f-addr">Street Address <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <select class="form-field__input" id="f-topic" required>
-          <option value="" disabled selected></option>
-          <option>Administrative</option><option>Amenities</option><option>Architectural</option>
-          <option>Clubhouse</option><option>Fencing</option><option>Gates/Security</option>
-          <option>Key/Fob</option><option>Landscaping</option><option>Lighting</option>
-          <option>Mailboxes</option><option>Maintenance</option><option>Pavement</option>
-          <option>Pool/Spa</option><option>Signs</option><option>Trash</option>
-          <option>Violations</option><option>Water/Irrigation</option>
-        </select>
-        <label class="form-field__label" for="f-topic">Request Topic <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <input type="text" class="form-field__input" placeholder=" " id="f-subject">
-        <label class="form-field__label" for="f-subject">Subject <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <textarea class="form-field__input" placeholder=" " id="f-desc"></textarea>
-        <label class="form-field__label" for="f-desc">Description <span class="form-field__req">*</span></label>
-      </div>
-      <div class="form-field">
-        <select class="form-field__input" id="f-method" required>
-          <option value="" disabled selected></option>
-          <option>Email</option><option>Phone</option><option>Either</option>
-        </select>
-        <label class="form-field__label" for="f-method">Preferred Contact Method <span class="form-field__req">*</span></label>
-      </div>
-      <button class="btn btn--primary" style="width:100%;margin-top:var(--space-sm)" id="submitBtn">Submit Request</button>
-    </div>
-
-    <h2 class="section__title sr" style="margin-top:var(--space-xl)">Not sure which topic to choose?</h2>
-    <div class="section__accent-line"></div>
-    <div class="table-wrap sr">
-      <table class="table">
-        <thead><tr><th>If your question is about...</th><th>Select:</th></tr></thead>
-        <tbody>
-          <tr><td>Board correspondence, documents, account changes</td><td><strong style="color:var(--primary)">Administrative</strong></td></tr>
-          <tr><td>Community amenities (playground, common areas)</td><td><strong style="color:var(--primary)">Amenities</strong></td></tr>
-          <tr><td>Exterior modifications (paint, solar panels, additions)</td><td><strong style="color:var(--primary)">Architectural</strong></td></tr>
-          <tr><td>Clubhouse reservations, access, or issues</td><td><strong style="color:var(--primary)">Clubhouse</strong></td></tr>
-          <tr><td>Community fences — damage, repairs</td><td><strong style="color:var(--primary)">Fencing</strong></td></tr>
-          <tr><td>Gate access, security cameras, security concerns</td><td><strong style="color:var(--primary)">Gates/Security</strong></td></tr>
-          <tr><td>Gate keys, fobs, remotes — lost, broken, or new</td><td><strong style="color:var(--primary)">Key/Fob</strong></td></tr>
-          <tr><td>Trees, shrubs, grass, common area plantings</td><td><strong style="color:var(--primary)">Landscaping</strong></td></tr>
-          <tr><td>Streetlights, pathway lights, common area lighting</td><td><strong style="color:var(--primary)">Lighting</strong></td></tr>
-          <tr><td>Mailbox damage, locks, cluster box issues</td><td><strong style="color:var(--primary)">Mailboxes</strong></td></tr>
-          <tr><td>General repairs not covered by other categories</td><td><strong style="color:var(--primary)">Maintenance</strong></td></tr>
-          <tr><td>Roads, sidewalks, curbs, driveways</td><td><strong style="color:var(--primary)">Pavement</strong></td></tr>
-          <tr><td>Pool or spa — access, cleanliness, hours</td><td><strong style="color:var(--primary)">Pool/Spa</strong></td></tr>
-          <tr><td>Community signs — damaged, missing, or new</td><td><strong style="color:var(--primary)">Signs</strong></td></tr>
-          <tr><td>Trash bins, pickup issues, bulk waste, recycling</td><td><strong style="color:var(--primary)">Trash</strong></td></tr>
-          <tr><td>Reporting a community rule violation</td><td><strong style="color:var(--primary)">Violations</strong></td></tr>
-          <tr><td>Sprinklers, irrigation leaks, drainage</td><td><strong style="color:var(--primary)">Water/Irrigation</strong></td></tr>
-        </tbody>
-      </table>
-    </div>
+    <div id="dyn-request-links" class="sr"></div>
   </div>
 </div>
 
@@ -2341,7 +2342,8 @@
       <button class="admin-tab" data-tab="documents">Documents</button>
       <button class="admin-tab" data-tab="providers">Vendors</button>
       <button class="admin-tab" data-tab="quicklinks">Quick Links</button>
-      <button class="admin-tab" data-tab="requests">Requests</button>
+      <button class="admin-tab" data-tab="requestlinks">Request Forms</button>
+      <button class="admin-tab" data-tab="requests">Past Submissions</button>
       <button class="admin-tab" data-tab="suggestions-admin">Suggestions</button>
       <button class="admin-tab" data-tab="newsletter">Newsletter</button>
       <button class="admin-tab" data-tab="settings">Settings</button>
@@ -2461,11 +2463,22 @@
       <div class="table-wrap"><table class="admin-table"><thead><tr><th>Label</th><th>Page</th><th>Order</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <!-- Requests Panel (read-only) -->
+    <!-- Request Forms Panel — manage external Google Form links shown on the public Submit-a-Request page -->
+    <div class="admin-panel" id="admin-requestlinks">
+      <div class="admin-toolbar">
+        <h4 style="font-weight:600">Request Forms</h4>
+        <button class="btn btn--primary btn--sm" onclick="SSS.adminCreateNew('request_links')">+ New Form Link</button>
+      </div>
+      <p style="font-size:var(--text-sm);color:var(--text-light);padding:0 var(--space-md) var(--space-sm)">Each entry becomes a clickable card on the public Submit a Request page. Use Category to group cards under a section header (e.g. "Administrative", "Clubhouse", "HOA"). Leave Category blank to put the card under "General".</p>
+      <div class="table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>URL</th><th>Sort</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <!-- Past Submissions Panel (archive of historical resident_requests rows; new submissions no longer flow here) -->
     <div class="admin-panel" id="admin-requests">
       <div class="admin-toolbar">
-        <h4 style="font-weight:600">Resident Requests</h4>
+        <h4 style="font-weight:600">Past Submissions</h4>
       </div>
+      <p style="font-size:var(--text-sm);color:var(--text-light);padding:0 var(--space-md) var(--space-sm)">Archive of submissions from the previous in-page form. New requests now flow through the Google Forms linked from the Request Forms tab; this list does not receive new entries.</p>
       <div class="table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Name</th><th>Topic</th><th>Subject</th><th>Status</th><th>Update</th></tr></thead><tbody></tbody></table></div>
     </div>
 
@@ -2795,7 +2808,7 @@
     async getQuickLinks() { return this.get('quick_links', { eq: { is_active: true }, order: ['sort_order'] }); },
     async getRequests() { return this.get('resident_requests', { order: ['submitted_at', false] }); },
     async getSuggestions() { return this.get('suggestions', { order: ['submitted_at', false] }); },
-    async submitRequest(d) { const { data, error } = await SSS.supabase.from('resident_requests').insert([d]).select(); if (error) throw error; return data[0]; },
+    async getRequestLinks() { return this.get('request_links', { eq: { is_active: true }, order: ['sort_order'] }); },
     async submitSuggestion(d) { const { data, error } = await SSS.supabase.from('suggestions').insert([d]).select(); if (error) throw error; return data[0]; }
   };
 
@@ -2937,7 +2950,58 @@
       return '<h3 class="nl-archive-heading">Newsletter Archive</h3>' +
         '<div class="nl-archive-grid" id="nl-archive-grid">' + grid + '</div>' +
         '<div class="nl-archive-expanded" id="nl-archive-expanded" hidden></div>';
+    },
+    // Public Submit-a-Request page — curated cards linking to admin-managed Google Forms.
+    // Optionally grouped under category section headers; rows with no category go under "General".
+    requestLinks(items) {
+      if (!items || !items.length) {
+        return '<div class="req-empty">No request forms have been added yet. Contact the property manager directly for assistance.</div>';
+      }
+      // Group by category (preserving sort_order within each group). Items without a
+      // category fall under "General" so admins can flat-file too.
+      const groups = new Map();
+      for (const it of items) {
+        const cat = (it.category && it.category.trim()) ? it.category.trim() : 'General';
+        if (!groups.has(cat)) groups.set(cat, []);
+        groups.get(cat).push(it);
+      }
+      const arrowSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="9 7 17 7 17 15"/></svg>';
+      const sections = [];
+      for (const [cat, rows] of groups) {
+        const cards = rows.map(it => {
+          const ic = ICONS[it.icon] || ICONS['default'];
+          return '<a class="req-card" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' +
+            '<span class="req-card__icon" aria-hidden="true">' + ic + '</span>' +
+            '<span class="req-card__title">' + esc(it.title) + '</span>' +
+            (it.description ? '<span class="req-card__desc">' + esc(it.description) + '</span>' : '') +
+            '<span class="req-card__arrow" aria-hidden="true">' + arrowSvg + '</span>' +
+          '</a>';
+        }).join('');
+        sections.push('<section class="req-section">' +
+          '<h3 class="req-section__title">' + esc(cat) + '</h3>' +
+          '<div class="req-grid">' + cards + '</div>' +
+        '</section>');
+      }
+      return sections.join('');
     }
+  };
+  // Inline SVG icon set for request-link cards. Admin chooses one via dropdown; missing/unknown falls back to default.
+  const ICONS = {
+    'default':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>',
+    'clipboard':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+    'home':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    'key':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="M18 5l3 3"/><path d="M15 8l3 3"/></svg>',
+    'wrench':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4.5 4.5 0 0 0 4 7.6l5 5a2 2 0 1 1-3 3l-5-5a4.5 4.5 0 0 1-7.6-4l3.6 3.6 2-2-3.6-3.6a4.5 4.5 0 0 1 4.6-1.6z"/></svg>',
+    'shield':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6z"/></svg>',
+    'mail':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    'pool':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 18s2-2 5-2 4 2 5 2 4-2 5-2 5 2 5 2"/><path d="M2 14s2-2 5-2 4 2 5 2 4-2 5-2 5 2 5 2"/><path d="M6 13V5a3 3 0 0 1 6 0"/><path d="M12 13V5"/></svg>',
+    'tree':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 6 10h3l-3 4h3l-2 4h10l-2-4h3l-3-4h3z"/><line x1="12" y1="18" x2="12" y2="22"/></svg>',
+    'droplet':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.7s7 6.5 7 12a7 7 0 0 1-14 0c0-5.5 7-12 7-12z"/></svg>',
+    'lightbulb':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.7.7 1 1.6 1 2.5V18h6v-.8c0-.9.3-1.8 1-2.5A7 7 0 0 0 12 2z"/></svg>',
+    'trash':         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    'gate':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+    'sign':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h12l3 3-3 3H5z"/><path d="M5 14h14l-3 3 3 3H5z"/><line x1="5" y1="2" x2="5" y2="22"/></svg>',
+    'users':         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
   };
 
   // === PAGE LOADERS ===
@@ -3077,24 +3141,21 @@
     }
   }
 
-  const pageLoaders = { home: loadHome, activities: loadActivities, announcements: loadAnnouncements, contact: loadContact, meetings: loadMeetings, newsletters: loadNewsletters, faq: loadFaq, newresidents: loadNewResidents, resources: loadResources };
+  async function loadRequest() {
+    if (!SSS.supabase) return;
+    const el = $('dyn-request-links');
+    if (!el) return;
+    showLoading(el);
+    try { el.innerHTML = R.requestLinks(await DS.getRequestLinks()); }
+    catch(e) { showError(el); }
+  }
+  const pageLoaders = { home: loadHome, activities: loadActivities, announcements: loadAnnouncements, contact: loadContact, meetings: loadMeetings, newsletters: loadNewsletters, faq: loadFaq, newresidents: loadNewResidents, resources: loadResources, request: loadRequest };
   function loadPageData(pageId) { const loader = pageLoaders[pageId]; if (loader) loader(); }
 
   // === FORM HANDLERS ===
-  $('submitBtn').addEventListener('click', async e => {
-    e.preventDefault();
-    const name = $('f-name').value.trim(), email = $('f-email').value.trim(), phone = $('f-phone').value.trim(),
-      address = $('f-addr').value.trim(), topic = $('f-topic').value, subject = $('f-subject').value.trim(),
-      description = $('f-desc').value.trim(), method = $('f-method').value;
-    if (!name || !email || !address || !topic || !subject || !description || !method) { toast('Please fill in all required fields.', 'error'); return; }
-    if (!SSS.supabase) { toast('Database not connected yet.', 'error'); return; }
-    const btn = $('submitBtn'); btn.disabled = true; btn.textContent = 'Submitting...';
-    try {
-      await DS.submitRequest({ resident_name: name, email, phone, address, topic, subject, description, contact_method: method });
-      fetch(EDGE_URL + '/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY }, body: JSON.stringify({ type: 'request', data: { resident_name: name, email, phone, address, topic, subject, description, contact_method: method } }) }).catch(function(){});
-      toast('Request submitted! You will receive a confirmation.'); ['f-name','f-email','f-phone','f-addr','f-topic','f-subject','f-desc','f-method'].forEach(id => { const el = $(id); if (el) el.value = ''; });
-    } catch(e) { toast('Submit failed: ' + e.message, 'error'); } finally { btn.disabled = false; btn.textContent = 'Submit Request'; }
-  });
+  // The legacy in-page Submit-a-Request form was replaced by R.requestLinks (curated cards
+  // linking to admin-managed Google Forms). DS.submitRequest and the send-notification call
+  // for type:'request' were removed alongside it. The Suggestion Box still uses suggestBtn.
 
   $('suggestBtn').addEventListener('click', async e => {
     e.preventDefault();
@@ -3151,7 +3212,8 @@
           nrcontacts: ['new_resident_contacts', ['need','contact','sort_order'], c => [esc(c.need), esc(c.contact), c.sort_order]],
           documents: ['documents', ['name','category','file_url'], d => [esc(d.name), esc(d.category), d.file_url?'Linked':'—']],
           providers: ['service_providers', ['service','company','phone'], p => [esc(p.service), esc(p.company), esc(p.phone||'—')]],
-          quicklinks: ['quick_links', ['label','page','sort_order'], l => [esc(l.label), esc(l.page), l.sort_order]]
+          quicklinks: ['quick_links', ['label','page','sort_order'], l => [esc(l.label), esc(l.page), l.sort_order]],
+          requestlinks: ['request_links', ['title','category','url','sort_order','is_active'], r => [esc(r.title), esc(r.category||'General'), '<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="color:var(--accent)">View</a>', r.sort_order, r.is_active?'Active':'Inactive']]
         };
         if (tabMap[tab]) {
           const [table,, cellFn] = tabMap[tab];
@@ -3218,7 +3280,16 @@
     new_resident_contacts: [{k:'need',l:'Need',t:'text',r:1},{k:'contact',l:'Contact',t:'text',r:1},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
     documents: [{k:'name',l:'Name',t:'text',r:1},{k:'file_url',l:'File URL',t:'text'},{k:'description',l:'Description',t:'textarea'},{k:'category',l:'Category',t:'select',o:['governing','forms','templates','other'],r:1},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
     service_providers: [{k:'service',l:'Service',t:'text',r:1},{k:'company',l:'Company',t:'text',r:1},{k:'phone',l:'Phone',t:'text'},{k:'website',l:'Website',t:'text'},{k:'notes',l:'Notes',t:'textarea'},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
-    quick_links: [{k:'label',l:'Label',t:'text',r:1},{k:'page',l:'Page ID',t:'text',r:1},{k:'icon_name',l:'Icon',t:'text'},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}]
+    quick_links: [{k:'label',l:'Label',t:'text',r:1},{k:'page',l:'Page ID',t:'text',r:1},{k:'icon_name',l:'Icon',t:'text'},{k:'sort_order',l:'Order',t:'number'},{k:'is_active',l:'Active',t:'checkbox'}],
+    request_links: [
+      {k:'title',l:'Title',t:'text',r:1},
+      {k:'url',l:'Google Form URL',t:'text',r:1},
+      {k:'description',l:'Description (optional, shown beneath the title)',t:'textarea'},
+      {k:'category',l:'Category (optional, groups cards under a section header)',t:'text'},
+      {k:'icon',l:'Icon',t:'select',o:['default','clipboard','home','key','wrench','shield','mail','pool','tree','droplet','lightbulb','trash','gate','sign','users']},
+      {k:'sort_order',l:'Sort Order',t:'number'},
+      {k:'is_active',l:'Active',t:'checkbox'}
+    ]
   };
 
   function showModal(table, data) {
@@ -3814,6 +3885,7 @@
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => { if (SSS.currentPage === 'home') loadHome(); if (SSS.currentPage === 'announcements') loadAnnouncements(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'board_meetings' }, () => { loadGlobalData(); if (SSS.currentPage === 'meetings') loadMeetings(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletters' }, () => { if (SSS.currentPage === 'newsletters') loadNewsletters(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'request_links' }, () => { if (SSS.currentPage === 'request') loadRequest(); })
       .subscribe();
   }
 
