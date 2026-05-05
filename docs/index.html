@@ -2634,7 +2634,35 @@
 
   // === UTILITIES ===
   function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-  function fmtDate(d) { if (!d) return ''; return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+  function fmtDate(d) {
+    if (!d) return '';
+    // Bare YYYY-MM-DD strings (from Postgres DATE columns) parse as UTC midnight in JS,
+    // which displays one day earlier in any negative-UTC zone (Las Vegas is UTC-7/8).
+    // Parse the components into a local Date so the day stays correct.
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const [y, m, day] = d.split('-').map(Number);
+      return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+    return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+  // Convert a TIMESTAMPTZ value (ISO-8601 with offset, e.g. "2026-05-19T18:00:00+00:00") to the
+  // "YYYY-MM-DDTHH:MM" shape that <input type="datetime-local"> requires, expressed in browser local time.
+  function isoToLocalInput(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  // Convert a "YYYY-MM-DDTHH:MM" datetime-local string (browser local time) to a full ISO string
+  // with the browser's timezone offset. Postgres TIMESTAMPTZ then stores the right instant
+  // regardless of session timezone.
+  function localInputToIso(local) {
+    if (!local) return null;
+    const d = new Date(local);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
   function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return `${hr > 12 ? hr-12 : hr||12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; }
   function $(id) { return document.getElementById(id); }
 
@@ -3300,7 +3328,11 @@
     const modal = $('adminModal');
     modal.innerHTML = '<h3>' + (isNew ? 'Create New' : 'Edit') + ' Item</h3>' +
       fields.map(f => {
-        const v = data ? data[f.k] : (f.t === 'checkbox' ? true : '');
+        let v = data ? data[f.k] : (f.t === 'checkbox' ? true : '');
+        // datetime-local inputs need "YYYY-MM-DDTHH:MM" in browser local time. The DB column is
+        // TIMESTAMPTZ which round-trips as ISO with an offset — convert on load so the input shows
+        // the same local moment the admin originally entered.
+        if (f.t === 'datetime-local' && data && v) v = isoToLocalInput(v);
         if (f.t === 'checkbox') return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-sm)"><input type="checkbox" id="modal-' + f.k + '" ' + (v ? 'checked' : '') + ' style="width:18px;height:18px"><label for="modal-' + f.k + '" style="font-size:var(--text-sm);font-weight:500">' + f.l + '</label></div>';
         if (f.t === 'select') return '<div class="form-field"><select class="form-field__input" id="modal-' + f.k + '"><option value="" disabled ' + (!v?'selected':'') + '></option>' + f.o.map(o => '<option' + (v===o?' selected':'') + '>' + o + '</option>').join('') + '</select><label class="form-field__label" for="modal-' + f.k + '">' + f.l + (f.r?' *':'') + '</label></div>';
         if (f.t === 'textarea') return '<div class="form-field"><textarea class="form-field__input" id="modal-' + f.k + '" placeholder=" ">' + esc(v||'') + '</textarea><label class="form-field__label" for="modal-' + f.k + '">' + f.l + (f.r?' *':'') + '</label></div>';
@@ -3403,7 +3435,15 @@
   SSS.saveModal = async function(table, id) {
     const fields = tableFields[table]; if (!fields) return;
     const d = {};
-    for (const f of fields) { const el = $('modal-' + f.k); if (!el) continue; if (f.t === 'checkbox') d[f.k] = el.checked; else if (f.t === 'number') d[f.k] = parseInt(el.value) || 0; else d[f.k] = el.value; }
+    for (const f of fields) {
+      const el = $('modal-' + f.k); if (!el) continue;
+      if (f.t === 'checkbox') d[f.k] = el.checked;
+      else if (f.t === 'number') d[f.k] = parseInt(el.value) || 0;
+      // datetime-local inputs return "YYYY-MM-DDTHH:MM" with no timezone. Convert to a full
+      // ISO string using the browser's local offset so Postgres stores the right instant.
+      else if (f.t === 'datetime-local') d[f.k] = localInputToIso(el.value);
+      else d[f.k] = el.value;
+    }
     try {
       if (id) {
         const { error } = await SSS.supabase.from(table).update(d).eq('id', id); if (error) throw error;
